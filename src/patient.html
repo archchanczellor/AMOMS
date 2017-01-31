@@ -1,0 +1,159 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<!--<link rel="import" href="../bower_components/paper-menu/paper-menu.html">-->
+<!--<link rel="import" href="../bower_components/paper-menu/paper-submenu.html">-->
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="shared-styles.html">
+<script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
+
+<dom-module id="patient-page">
+
+    <template>
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+
+            .center {
+                @apply(--layout-vertical);
+                @apply(--layout-center);
+            }
+
+            .patient-info {
+                background: white;
+                padding: 25px 35px;
+                border-radius: 4px;
+                min-width: 60vw;
+                /*max-height: 120px;*/
+                height: auto;
+            }
+
+            .patient-content {
+                max-height: 0;
+                -webkit-transition: max-height .25s;
+                -moz-transition: max-height .25s;
+                -ms-transition: max-height .25s;
+                -o-transition: max-height .25s;
+                transition: max-height .25s;
+            }
+
+            .spacer {
+                height: 5vh;
+            }
+
+            .item {
+                position: relative;
+            }
+
+            .itemName {
+                padding: 0 5px 0 5px;
+            }
+
+            #scrollingRegion {
+                position: absolute;
+                overflow-y: auto;
+                right: 0;
+                left: 0;
+                max-height: 69vh;
+                width: 20vw;
+                margin-left: auto;
+                margin-right: auto;
+                background-color: #fff;
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+                scroll-behavior: smooth;
+            }
+
+            .justifyItems {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+                width: 18vw;
+            }
+
+            paper-icon-button {
+                padding: 1px;
+                height: 24px;
+                width: 24px;
+            }
+
+        </style>
+        <div class="center">
+            <paper-material class="patient-info" elevation="1">
+                <h1>Patient Info</h1>
+                <div class="patient-content">
+                    <div>[[patientName]]</div>
+                    <div>[[patientEmail]]</div>
+                </div>
+            </paper-material>
+        </div>
+        <div class="spacer"></div>
+        <iron-ajax url="../resources/test-patients.json" last-response="{{data}}" auto></iron-ajax>
+        <app-box id="scrollingRegion">
+            <paper-listbox>
+                <template is="dom-repeat" items="{{data}}" selected="{{selected}}">
+                    <paper-item class="item" on-tap="_updatePatient">
+                        <paper-item-body two-line>
+                            <div class="justifyItems">
+                                <div class="itemName">[[item.name]]</div>
+                                <paper-icon-button icon="create"></paper-icon-button>
+                            </div>
+                        </paper-item-body>
+                    </paper-item>
+                </template>
+            </paper-listbox>
+        </app-box>
+
+        <!--<paper-menu id="menu">-->
+        <!--<paper-submenu id="submenu">-->
+
+        <!--<paper-menu class="menu-content">-->
+        <!--<paper-item>[[item.email]]</paper-item>-->
+        <!--</paper-menu>-->
+        <!--</paper-submenu>-->
+        <!--</paper-menu>-->
+    </template>
+
+    <script>
+
+        Polymer({
+
+            is: 'patient-page',
+            properties: {
+                patientName: String,
+                patientEmail: String,
+                selected: String
+            },
+            _updatePatient: function (e) {
+//                $('.patient-info').animate({
+//                    height: '120px'
+//                }, 200);
+                $('.patient-content').css('max-height', '20vh');
+                this.patientName = e.model.item.name;
+                this.patientEmail = e.model.item.email;
+
+
+            },
+            testShow: function () {
+                console.log(this.selected);
+            }
+
+        });
+
+    </script>
+
+</dom-module>

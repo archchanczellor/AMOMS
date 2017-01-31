@@ -1,0 +1,113 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="credentials.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="login-page">
+
+  <template>
+
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+      paper-card {
+        background-color: white;
+        max-width: 50%;
+        min-width: 30%;
+        --paper-card-header-text: {
+          padding: 16px 24px 0 24px;
+          text-align: center;
+        };
+      }
+      .Aligner {
+        /*display: flex;*/
+        /*align-items: center;*/
+        /*justify-content: center;*/
+        height: 75vh;
+        @apply(--layout-horizontal);
+        @apply(--layout-center-center);
+      }
+      .horizontal {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+      }
+      .submit {
+        background: #448AFF;
+        color: white;
+      }
+    </style>
+
+    <div hidden$="[[user]]">
+      <firebase-auth id="auth" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
+      <div class="Aligner">
+        <paper-card heading="Login">
+          <div class="card-content">
+            <form id="submitLogin">
+              <login-credentials email="{{email}}" password="{{password}}"></login-credentials>
+              <input name="email" value="[[email]]" hidden>
+              <input name="password" value="[[password]]" hidden>
+              <div class="horizontal">
+                <paper-button raised class="submit" type="submit" on-tap="signInWithEmailAndPassword">Login
+                </paper-button>
+                <!--<paper-button raised class="submit" on-tap="signUpWithEmailAndPassword">Sign Up</paper-button>-->
+              </div>
+            </form>
+          </div>
+        </paper-card>
+      </div>
+    </div>
+    <div hidden$="[[!user]]">
+      <p>You are logged in as [[user.email]]. Check out the schedule.<a href="/schedule">here.</a></p>
+      <paper-button on-tap="_logout">Logout</paper-button>
+    </div>
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      is: 'login-page',
+        properties: {
+          errorMessage: String
+        },
+        signInWithEmailAndPassword: function () {
+            this.$.auth.signInWithEmailAndPassword(this.email, this.password)
+                .then(function(response){
+                    this.$$('login-credentials').fire('clearCred');
+                    this.email = null;
+                    this.password = null;
+                    window.history.pushState({}, null, '/schedule');
+                    window.dispatchEvent(new CustomEvent('location-changed'));
+                })
+                .catch(function(error){
+                    this.errorMessage = "Something went horribly wrong. Please try again."
+                    this.fire('openError');
+                });
+        },
+        _logout: function() {
+          this.$.auth.signOut();
+        }
+
+
+    });
+
+  </script>
+
+</dom-module>
