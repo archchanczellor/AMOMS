@@ -22,9 +22,17 @@ The PRPL pattern, in a nutshell:
 
 ##### Prerequisites
 
+Install [node.js](https://nodejs.org/):
+
+Install [bower](https://bower.io/);
+   
+    npm install -g bower
+
 Install [polymer-cli](https://github.com/Polymer/polymer-cli):
 
     npm install -g polymer-cli
+    
+
 
 ##### Initialize project from template
 
@@ -32,12 +40,22 @@ Install [polymer-cli](https://github.com/Polymer/polymer-cli):
     cd my-app
     polymer init starter-kit
 
+##### Install dependencies
+
+    bower install
+    npm update
+
 ### Start the development server
 
 This command serves the app at `http://localhost:8080` and provides basic URL
 routing for the app:
 
     polymer serve --open
+    
+### Test Login 
+
+    email: mdrussell01@gmail.com
+    pass: passwordtest
 
 
 ### Build
