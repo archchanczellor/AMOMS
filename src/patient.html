@@ -15,11 +15,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <!--<link rel="import" href="../bower_components/paper-menu/paper-menu.html">-->
 <!--<link rel="import" href="../bower_components/paper-menu/paper-submenu.html">-->
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
+<link rel="import" href="../bower_components/gold-phone-input/gold-phone-input.html">
+<link rel="import" href="../bower_components/gold-zip-input/gold-zip-input.html">
+<link rel="import" href="../bower_components/app-datepicker/app-datepicker-dialog.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../extra-files/address-autocomplete/address-autocomplete.html">
 <link rel="import" href="shared-styles.html">
 <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
-
+<script src="../bower_components/jquery-serialize-object/dist/jquery.serialize-object.min.js"></script>
 <dom-module id="patient-page">
 
     <template>
@@ -91,25 +105,71 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 width: 24px;
             }
 
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
+
+            .horizontalLayout {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+            }
+
+            #firstName {
+                padding-right: 5px;
+            }
+
+            #lastName {
+                padding-left: 5px;
+            }
+
         </style>
+        <firebase-query
+                id="query"
+                path="/patients"
+                data="{{data}}">
+        </firebase-query>
+        <firebase-document
+                id="document"
+                path="/patients/"
+                data="{{patientData}}">
+        </firebase-document>
         <div class="center">
             <paper-material class="patient-info" elevation="1">
                 <h1>Patient Info</h1>
                 <div class="patient-content">
-                    <div>[[patientName]]</div>
-                    <div>[[patientEmail]]</div>
+                    <div>[[patient.firstName]] [[patient.lastName]] [[patient.phoneNumber]]</div>
+                    <div>[[patient.email]]</div>
+                    <div>[[patient.gender]]</div>
+                    <div>[[patient.birthdate]]</div>
+                    <div>[[patient.streetAddress1]]</div>
+                    <template is="if" if="[[patient.streetAddress2]]">
+                        <div>[[patient.streetAddress2]]</div>
+                    </template>
+                    <div>[[patient.state]]</div>
+                    <div>[[patient.city]]</div>
+                    <div>[[patient.zip]]</div>
                 </div>
             </paper-material>
         </div>
+        <div class="justify-right">
+            <paper-button on-tap="openDialog">Add Patient</paper-button>
+        </div>
         <div class="spacer"></div>
-        <iron-ajax url="../resources/test-patients.json" last-response="{{data}}" auto></iron-ajax>
+        <!--<iron-ajax url="../resources/test-patients.json" last-response="{{data}}" auto loading="{{loadingPatients}}"></iron-ajax>-->
         <app-box id="scrollingRegion">
+            <template is="if" if="{{loadingPatients}}">
+                <div class="center">
+                    <paper-spinner active></paper-spinner>
+                </div>
+            </template>
             <paper-listbox>
                 <template is="dom-repeat" items="{{data}}" selected="{{selected}}">
                     <paper-item class="item" on-tap="_updatePatient">
                         <paper-item-body two-line>
                             <div class="justifyItems">
-                                <div class="itemName">[[item.name]]</div>
+                                <!--<div class="itemName">[[item.name]]</div>-->
+                                <div class="itemName">[[item.firstName]] [[item.lastName]]</div>
                                 <paper-icon-button icon="create"></paper-icon-button>
                             </div>
                         </paper-item-body>
@@ -118,40 +178,95 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </paper-listbox>
         </app-box>
 
-        <!--<paper-menu id="menu">-->
-        <!--<paper-submenu id="submenu">-->
+        <paper-dialog id="addPatientDialog"
+                      no-cancel-on-outside-click
+                      class="paper-date-picker-dialog"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <form is="iron-form" id="addPatientForm">
+                <h2>Add Patient</h2>
+                <div class="horizontalLayout">
+                    <paper-input id="firstName" name="firstName" label="First Name" required></paper-input>
+                    <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
+                </div>
+                <div class="address">
+                    <address-autocomplete></address-autocomplete>
+                    <!--<paper-input name="street" label="Street" required></paper-input>-->
+                    <!--<paper-input name="city" label="City" required></paper-input>-->
+                    <!--<paper-input name="state" label="State" required></paper-input>-->
+                    <!--<gold-zip-input name="zip" label="Zip Code" auto-validate required></gold-zip-input>-->
+                </div>
+                <gold-phone-input name="phoneNumber" label="Phone Number" auto-validate required></gold-phone-input>
+                <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
+                <paper-input name="birthdate" on-tap="openDate" value="{{birthdate}}" label="Birthdate"
+                             required></paper-input>
+                <app-datepicker-dialog id="datePicker" date="{{birthdate}}"></app-datepicker-dialog>
+                <paper-dropdown-menu label="Gender" id="gender" name="gender" required>
+                    <paper-menu class="dropdown-content">
+                        <paper-item value="female">Female</paper-item>
+                        <paper-item value="male">Male</paper-item>
+                        <paper-item value="optOut">Prefer not to say</paper-item>
+                    </paper-menu>
+                </paper-dropdown-menu>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Close</paper-button>
+                    <paper-button onclick="_submit()">Submit</paper-button>
+                </div>
+            </form>
+        </paper-dialog>
 
-        <!--<paper-menu class="menu-content">-->
-        <!--<paper-item>[[item.email]]</paper-item>-->
-        <!--</paper-menu>-->
-        <!--</paper-submenu>-->
-        <!--</paper-menu>-->
     </template>
-
+    <script>
+        function _submit(event) {
+            $('#addPatientForm').submit()
+        }
+    </script>
     <script>
 
         Polymer({
 
             is: 'patient-page',
+
             properties: {
-                patientName: String,
-                patientEmail: String,
-                selected: String
+                patientName: Object,
+                selected: String,
+                errorMessage: {
+                    type: String,
+                    notify: true
+                }
             },
+
+            listeners: {
+                'iron-form-submit': 'addPatient'
+            },
+
             _updatePatient: function (e) {
-//                $('.patient-info').animate({
-//                    height: '120px'
-//                }, 200);
                 $('.patient-content').css('max-height', '20vh');
-                this.patientName = e.model.item.name;
-                this.patientEmail = e.model.item.email;
-
-
+                this.patient = e.model.item;
             },
+
             testShow: function () {
                 console.log(this.selected);
-            }
+            },
 
+            openDialog: function () {
+                this.$.addPatientDialog.open();
+            },
+
+            addPatient: function () {
+                var data = $("#addPatientForm :input").serializeObject();
+                data.gender = this.$.gender.value
+                this.$.document.data = data;
+                this.$.document.save('/patients/').then(function() {
+                    document.querySelector('#addPatientDialog').close();
+                }, function() {
+                    document.querySelector('patient-page').errorMessage = 'Something seems to have gone wrong. Please try again.'
+                    document.querySelector('#errorDialog');
+                })
+            },
+            openDate: function () {
+                this.$.datePicker.open();
+            }
         });
 
     </script>

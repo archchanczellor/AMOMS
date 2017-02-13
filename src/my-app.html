@@ -75,10 +75,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 tail="{{subroute}}"></app-route>
         <firebase-app api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI"
                       auth-domain="amoms-9ecf6.firebaseapp.com"
-                      database-url="https://amoms-9ecf6.firebaseio.com"></firebase-app>
+                      database-url="https://amoms-9ecf6.firebaseio.com"
+                      storage-bucket="amoms-9ecf6.appspot.com"></firebase-app>
         <firebase-auth id="mainAuth" user="{{user}}" provider="google" on-error="handleError"></firebase-auth>
 
-        <app-drawer-layout fullbleed>
+        <app-drawer-layout fullbleed force-narrow>
 
             <!-- Drawer content -->
             <app-drawer>
@@ -112,13 +113,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="view404" role="main">
                     <login-page name="login"></login-page>
                     <schedule-page name="schedule"></schedule-page>
-                    <patient-page name="patient"></patient-page>
+                    <patient-page name="patient" error-message="{{errorMessage}}"></patient-page>
                     <my-view404 name="view404"></my-view404>
                 </iron-pages>
 
             </app-header-layout>
 
         </app-drawer-layout>
+        <paper-dialog modal>
+            <h3>Hmm...</h3>
+            <p>{{errorMessage}}</p>
+            <paper-button dialog-dismiss>Close</paper-button>
+        </paper-dialog>
 
     </template>
 
@@ -144,7 +150,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             _routePageChanged: function (page) {
 //                if (this.user) {
-                    this.page = page || 'login';
+                this.page = page || 'login';
 //                }
 //                else {
 ////                    window.history.replaceState({}, null, '/login');
