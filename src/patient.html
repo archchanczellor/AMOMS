@@ -49,17 +49,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 @apply(--layout-center);
             }
 
+            .horizontal-around {
+                @apply(--layout-horizontal);
+                @apply(--layout-around-justified);
+            }
+
             .patient-info {
                 background: white;
                 padding: 25px 35px;
                 border-radius: 4px;
                 min-width: 60vw;
-                /*max-height: 120px;*/
                 height: auto;
             }
 
             .patient-content {
-                max-height: 0;
+                max-height: 30vh;
                 -webkit-transition: max-height .25s;
                 -moz-transition: max-height .25s;
                 -ms-transition: max-height .25s;
@@ -80,14 +84,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
 
             #scrollingRegion {
-                position: absolute;
+                border-radius: 4px;
                 overflow-y: auto;
-                right: 0;
-                left: 0;
                 max-height: 69vh;
                 width: 20vw;
-                margin-left: auto;
-                margin-right: auto;
                 background-color: #fff;
                 box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
                 scroll-behavior: smooth;
@@ -97,12 +97,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 @apply(--layout-horizontal);
                 @apply(--layout-justified);
                 width: 18vw;
-            }
-
-            paper-icon-button {
-                padding: 1px;
-                height: 24px;
-                width: 24px;
             }
 
             .buttons {
@@ -115,17 +109,58 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 @apply(--layout-justified);
             }
 
-            #firstName {
+            #firstName, #birthdate {
                 padding-right: 5px;
             }
 
-            #lastName {
+            #lastName, #gender {
                 padding-left: 5px;
+            }
+
+            .horizontal-layout {
+                @apply(--layout-horizontal);
+            }
+
+            .vertical-layout {
+                @apply(--layout-vertical);
+            }
+
+            .form-left {
+                padding-right: 10px;
+                width: 50%;
+            }
+
+            .form-right {
+                width: 50%;
+            }
+
+            .justify-right {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+                padding: 20px 0;
+            }
+
+            .patients-title {
+                padding: 0 20px;
+            }
+
+            #addPatientButton {
+                background-color: #2196F3;
+                color: white;
+            }
+
+            .horizontal-justified {
+                @apply(--layout-justified);
+            }
+
+            .edit-patient-button {
+                color: white;
+                background-color: #F44336;
             }
 
         </style>
         <firebase-query
-                id="query"
+                id="queryPatients"
                 path="/patients"
                 data="{{data}}">
         </firebase-query>
@@ -134,49 +169,62 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 path="/patients/"
                 data="{{patientData}}">
         </firebase-document>
-        <div class="center">
-            <paper-material class="patient-info" elevation="1">
-                <h1>Patient Info</h1>
-                <div class="patient-content">
-                    <div>[[patient.firstName]] [[patient.lastName]] [[patient.phoneNumber]]</div>
-                    <div>[[patient.email]]</div>
-                    <div>[[patient.gender]]</div>
-                    <div>[[patient.birthdate]]</div>
-                    <div>[[patient.streetAddress1]]</div>
-                    <template is="if" if="[[patient.streetAddress2]]">
-                        <div>[[patient.streetAddress2]]</div>
-                    </template>
-                    <div>[[patient.state]]</div>
-                    <div>[[patient.city]]</div>
-                    <div>[[patient.zip]]</div>
+        <div class="horizontal-around">
+            <div>
+                <div class="center">
+                    <paper-material class="patient-info" elevation="1">
+                        <div class="horizontal-justified horizontal-layout">
+                            <h1>Patient Info</h1>
+                            <div hidden$="[[!patient]]">
+                                <paper-button class="edit-patient-button" on-tap="_editPatient">Edit</paper-button>
+                            </div>
+                        </div>
+                        <div class="patient-content">
+                            <div>Name: [[patient.firstName]] [[patient.lastName]]</div>
+                            <div>Phone: [[patient.phoneNumber]]</div>
+                            <div>Email: [[patient.email]]</div>
+                            <div>Gender: [[patient.gender]]</div>
+                            <div>Birthdate: [[patient.birthdate]]</div>
+                            <div>Street: [[patient.streetAddress1]]</div>
+                            <template is="if" if="[[patient.streetAddress2]]">
+                                <div>Street 2: [[patient.streetAddress2]]</div>
+                            </template>
+                            <div>State: [[patient.state]]</div>
+                            <div>City: [[patient.city]]</div>
+                            <div>ZIP: [[patient.zip]]</div>
+                        </div>
+                    </paper-material>
                 </div>
+                <div class="justify-right">
+                    <paper-button id="addPatientButton" on-tap="openDialog">Add Patient</paper-button>
+                </div>
+            </div>
+            <paper-material id="scrollingRegion">
+                <h1 class="patients-title">Patients</h1>
+                <paper-listbox>
+                    <!--<template is="dom-repeat" items="{{data}}" id="patientList" as="item" selected="{{selected}}">-->
+                    <iron-list items="{{data}}" as="item" id="patientList">
+                        <template>
+                            <paper-item class="item" on-tap="_updatePatient">
+                                <paper-item-body two-line>
+                                    <div class="justifyItems">
+                                        <!--<div class="itemName">[[item.name]]</div>-->
+                                        <div class="itemName">[[item.firstName]] [[item.lastName]]</div>
+                                        <!--<paper-icon-button icon="create"></paper-icon-button>-->
+                                    </div>
+                                </paper-item-body>
+                            </paper-item>
+                        </template>
+                    </iron-list>
+                    <!--</template>-->
+                </paper-listbox>
             </paper-material>
         </div>
-        <div class="justify-right">
-            <paper-button on-tap="openDialog">Add Patient</paper-button>
-        </div>
+
+
         <div class="spacer"></div>
         <!--<iron-ajax url="../resources/test-patients.json" last-response="{{data}}" auto loading="{{loadingPatients}}"></iron-ajax>-->
-        <app-box id="scrollingRegion">
-            <template is="if" if="{{loadingPatients}}">
-                <div class="center">
-                    <paper-spinner active></paper-spinner>
-                </div>
-            </template>
-            <paper-listbox>
-                <template is="dom-repeat" items="{{data}}" selected="{{selected}}">
-                    <paper-item class="item" on-tap="_updatePatient">
-                        <paper-item-body two-line>
-                            <div class="justifyItems">
-                                <!--<div class="itemName">[[item.name]]</div>-->
-                                <div class="itemName">[[item.firstName]] [[item.lastName]]</div>
-                                <paper-icon-button icon="create"></paper-icon-button>
-                            </div>
-                        </paper-item-body>
-                    </paper-item>
-                </template>
-            </paper-listbox>
-        </app-box>
+
 
         <paper-dialog id="addPatientDialog"
                       no-cancel-on-outside-click
@@ -185,41 +233,101 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       exit-animation="fade-out-animation">
             <form is="iron-form" id="addPatientForm">
                 <h2>Add Patient</h2>
-                <div class="horizontalLayout">
-                    <paper-input id="firstName" name="firstName" label="First Name" required></paper-input>
-                    <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
+                <div class="horizontal-layout">
+                    <div class="vertical-layout form-left">
+                        <div class="horizontalLayout">
+                            <paper-input id="firstName" name="firstName" label="First Name" autofocus
+                                         required></paper-input>
+                            <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
+                        </div>
+                        <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
+                        <gold-phone-input name="phoneNumber" label="Phone Number" auto-validate
+                                          required></gold-phone-input>
+                        <paper-input name="birthdate" on-tap="openDate" id="birthdate" value="{{birthdate}}"
+                                     label="Birthdate"
+                                     required></paper-input>
+                        <paper-dropdown-menu label="Gender" id="gender" name="gender" required>
+                            <paper-menu class="dropdown-content">
+                                <paper-item value="female">Female</paper-item>
+                                <paper-item value="male">Male</paper-item>
+                                <paper-item value="optOut">Prefer not to say</paper-item>
+                            </paper-menu>
+                        </paper-dropdown-menu>
+                    </div>
+                    <div class="address form-right">
+                        <address-autocomplete></address-autocomplete>
+                    </div>
                 </div>
-                <div class="address">
-                    <address-autocomplete></address-autocomplete>
-                    <!--<paper-input name="street" label="Street" required></paper-input>-->
-                    <!--<paper-input name="city" label="City" required></paper-input>-->
-                    <!--<paper-input name="state" label="State" required></paper-input>-->
-                    <!--<gold-zip-input name="zip" label="Zip Code" auto-validate required></gold-zip-input>-->
-                </div>
-                <gold-phone-input name="phoneNumber" label="Phone Number" auto-validate required></gold-phone-input>
-                <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
-                <paper-input name="birthdate" on-tap="openDate" value="{{birthdate}}" label="Birthdate"
-                             required></paper-input>
-                <app-datepicker-dialog id="datePicker" date="{{birthdate}}"></app-datepicker-dialog>
-                <paper-dropdown-menu label="Gender" id="gender" name="gender" required>
-                    <paper-menu class="dropdown-content">
-                        <paper-item value="female">Female</paper-item>
-                        <paper-item value="male">Male</paper-item>
-                        <paper-item value="optOut">Prefer not to say</paper-item>
-                    </paper-menu>
-                </paper-dropdown-menu>
                 <div class="buttons">
                     <paper-button dialog-dismiss>Close</paper-button>
                     <paper-button onclick="_submit()">Submit</paper-button>
                 </div>
             </form>
         </paper-dialog>
-
+        <paper-dialog id="editPatientDialog"
+                      no-cancel-on-outside-click
+                      class="paper-date-picker-dialog"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <form is="iron-form" id="editPatientForm">
+                <h2>Edit [[patient.firstName]] [[patient.lastName]]</h2>
+                <div class="horizontal-layout">
+                    <div class="vertical-layout form-left">
+                        <div class="horizontal-layout horizontal-justified">
+                            <paper-input id="editFirst" name="firstName" label="First Name" autofocus
+                                         required value="{{patient.firstName::input}}"></paper-input>
+                            <paper-input id="editLast" name="lastName" label="Last Name"
+                                         value="{{patient.lastName::input}}" required></paper-input>
+                        </div>
+                        <gold-email-input name="email" label="Email" validate
+                                          value="{{patient.email::input}}" required></gold-email-input>
+                        <gold-phone-input name="phoneNumber" label="Phone Number" validate
+                                          value="{{patient.phoneNumber::input}}" required></gold-phone-input>
+                        <paper-input name="birthdate" on-tap="editDate" id="editDOB"
+                                     value="{{patient.birthdate::input}}"
+                                     label="Birthdate"
+                                     required></paper-input>
+                        <paper-dropdown-menu label="Gender" id="editGender" name="gender" required
+                                             placeholder="{{patient.gender}}">
+                            <paper-menu class="dropdown-content" selected="{{patient.gender}}" attr-for-selected="name">
+                                <paper-item name="female" value="female">Female</paper-item>
+                                <paper-item name="male" value="male">Male</paper-item>
+                                <paper-item name="optOut" value="optOut">Prefer not to say</paper-item>
+                            </paper-menu>
+                        </paper-dropdown-menu>
+                    </div>
+                    <div class="address form-right">
+                        <paper-input id="editAddressInput" type="text" placeholder="" name="streetAddress1" required
+                                     label="Street Address 1" value="{{patient.streetAddress1::input}}"></paper-input>
+                        <paper-input id="editAddress2Input" type="text" name="streetAddress2"
+                                     label="Street Address 2" value="{{patient.streetAddress2::input}}"></paper-input>
+                        <paper-input id="editCityInput" type="text" name="city" required
+                                     value="{{patient.city::input}}" label="City"></paper-input>
+                        <paper-input id="editStateInput" type="text" name="state"
+                                     value="{{patient.state::input}}" required label="State"></paper-input>
+                        <paper-input id="editZipCodeInput" type="text" name="zip" required
+                                     label="ZIP Code" value="{{patient.zip::input}}"></paper-input>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Close</paper-button>
+                    <paper-button on-tap="_saveEdit">Save</paper-button>
+                </div>
+            </form>
+        </paper-dialog>
+        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="datePicker"
+                               date="{{birthdate}}"></app-datepicker-dialog>
+        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel"
+                               input-date="{{patient.birthdate}}" id="editDate"
+                               date="{{patient.birthdate}}"></app-datepicker-dialog>
     </template>
     <script>
         function _submit(event) {
             $('#addPatientForm').submit()
         }
+        //        function _submitEdit(event) {
+        //            $('#editPatientForm').submit();
+        //        }
     </script>
     <script>
 
@@ -229,11 +337,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             properties: {
                 patientName: Object,
+                patient: {
+                    type: Object,
+                    value: null
+                },
                 selected: String,
                 errorMessage: {
                     type: String,
                     notify: true
-                }
+                },
+                data: Object
             },
 
             listeners: {
@@ -241,7 +354,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             _updatePatient: function (e) {
-                $('.patient-content').css('max-height', '20vh');
                 this.patient = e.model.item;
             },
 
@@ -253,19 +365,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.$.addPatientDialog.open();
             },
 
+            _editPatient: function () {
+                this.$.editPatientDialog.open();
+            },
+
             addPatient: function () {
                 var data = $("#addPatientForm :input").serializeObject();
                 data.gender = this.$.gender.value
                 this.$.document.data = data;
-                this.$.document.save('/patients/').then(function() {
+                this.$.document.save('/patients/').then(function () {
                     document.querySelector('#addPatientDialog').close();
-                }, function() {
+                }, function () {
+                    document.querySelector('patient-page').errorMessage = 'Something seems to have gone wrong. Please try again.'
+                    document.querySelector('#errorDialog');
+                })
+            },
+            _saveEdit: function () {
+                var key = this.patient.$key;
+                delete this.patient.$key;
+                this.$.document.data = this.patient;
+//                var key = this.patient.$key;
+                this.$.document.save('/patients/', key).then(function () {
+                    document.querySelector('#editPatientDialog').close();
+                    document.querySelector('#patientList').notifyResize();
+                }, function () {
                     document.querySelector('patient-page').errorMessage = 'Something seems to have gone wrong. Please try again.'
                     document.querySelector('#errorDialog');
                 })
             },
             openDate: function () {
                 this.$.datePicker.open();
+            },
+            editDate: function () {
+                this.$.editDate.open();
             }
         });
 
