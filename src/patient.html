@@ -31,6 +31,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/app-datepicker/app-datepicker-dialog.html">
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../extra-files/address-autocomplete/address-autocomplete.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="shared-styles.html">
 <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
 <script src="../bower_components/jquery-serialize-object/dist/jquery.serialize-object.min.js"></script>
@@ -63,7 +64,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
 
             .patient-content {
-                max-height: 30vh;
+                max-height: 35vh;
                 -webkit-transition: max-height .25s;
                 -moz-transition: max-height .25s;
                 -ms-transition: max-height .25s;
@@ -75,7 +76,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 height: 5vh;
             }
 
-            .item {
+            .itemInfo {
                 position: relative;
             }
 
@@ -85,8 +86,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             #scrollingRegion {
                 border-radius: 4px;
-                overflow-y: auto;
-                max-height: 69vh;
+                overflow-y: hidden;
+                max-height: 79vh;
                 width: 20vw;
                 background-color: #fff;
                 box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
@@ -158,11 +159,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 background-color: #F44336;
             }
 
+            .class[hidden] {
+                display: none;
+            }
+
         </style>
         <firebase-query
                 id="queryPatients"
                 path="/patients"
-                data="{{data}}">
+                data="{{dataQuery}}">
         </firebase-query>
         <firebase-document
                 id="document"
@@ -201,29 +206,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </div>
             <paper-material id="scrollingRegion">
                 <h1 class="patients-title">Patients</h1>
-                <paper-listbox>
-                    <!--<template is="dom-repeat" items="{{data}}" id="patientList" as="item" selected="{{selected}}">-->
-                    <iron-list items="{{data}}" as="item" id="patientList">
-                        <template>
-                            <paper-item class="item" on-tap="_updatePatient">
-                                <paper-item-body two-line>
-                                    <div class="justifyItems">
-                                        <!--<div class="itemName">[[item.name]]</div>-->
-                                        <div class="itemName">[[item.firstName]] [[item.lastName]]</div>
-                                        <!--<paper-icon-button icon="create"></paper-icon-button>-->
-                                    </div>
-                                </paper-item-body>
-                            </paper-item>
-                        </template>
-                    </iron-list>
-                    <!--</template>-->
-                </paper-listbox>
+                <template is="dom-repeat" items="{{dataQuery}}" id="patientList">
+                    <paper-item class="itemInfo" on-tap="_updatePatient">
+                        <paper-item-body two-line>
+                            <div class="justifyItems">
+                                <div class="itemName">{{_concat(item.firstName, item.lastName)}}</div>
+                            </div>
+                        </paper-item-body>
+                    </paper-item>
+                </template>
             </paper-material>
         </div>
 
 
         <div class="spacer"></div>
-        <!--<iron-ajax url="../resources/test-patients.json" last-response="{{data}}" auto loading="{{loadingPatients}}"></iron-ajax>-->
 
 
         <paper-dialog id="addPatientDialog"
@@ -275,21 +271,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <div class="vertical-layout form-left">
                         <div class="horizontal-layout horizontal-justified">
                             <paper-input id="editFirst" name="firstName" label="First Name" autofocus
-                                         required value="{{patient.firstName::input}}"></paper-input>
+                                         required value="{{patientEdit.firstName::input}}"></paper-input>
                             <paper-input id="editLast" name="lastName" label="Last Name"
-                                         value="{{patient.lastName::input}}" required></paper-input>
+                                         value="{{patientEdit.lastName::input}}" required></paper-input>
                         </div>
                         <gold-email-input name="email" label="Email" validate
-                                          value="{{patient.email::input}}" required></gold-email-input>
+                                          value="{{patientEdit.email::input}}" required></gold-email-input>
                         <gold-phone-input name="phoneNumber" label="Phone Number" validate
-                                          value="{{patient.phoneNumber::input}}" required></gold-phone-input>
+                                          value="{{patientEdit.phoneNumber::input}}" required></gold-phone-input>
                         <paper-input name="birthdate" on-tap="editDate" id="editDOB"
-                                     value="{{patient.birthdate::input}}"
+                                     value="{{patientEdit.birthdate::input}}"
                                      label="Birthdate"
                                      required></paper-input>
-                        <paper-dropdown-menu label="Gender" id="editGender" name="gender" required
-                                             placeholder="{{patient.gender}}">
-                            <paper-menu class="dropdown-content" selected="{{patient.gender}}" attr-for-selected="name">
+                        <paper-dropdown-menu label="Gender" id="editGender" name="gender" required>
+                            <paper-menu class="dropdown-content" selected="{{_computeSelected(patientEdit.gender)}}">
                                 <paper-item name="female" value="female">Female</paper-item>
                                 <paper-item name="male" value="male">Male</paper-item>
                                 <paper-item name="optOut" value="optOut">Prefer not to say</paper-item>
@@ -298,15 +293,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     </div>
                     <div class="address form-right">
                         <paper-input id="editAddressInput" type="text" placeholder="" name="streetAddress1" required
-                                     label="Street Address 1" value="{{patient.streetAddress1::input}}"></paper-input>
+                                     label="Street Address 1"
+                                     value="{{patientEdit.streetAddress1::input}}"></paper-input>
                         <paper-input id="editAddress2Input" type="text" name="streetAddress2"
-                                     label="Street Address 2" value="{{patient.streetAddress2::input}}"></paper-input>
+                                     label="Street Address 2"
+                                     value="{{patientEdit.streetAddress2::input}}"></paper-input>
                         <paper-input id="editCityInput" type="text" name="city" required
-                                     value="{{patient.city::input}}" label="City"></paper-input>
+                                     value="{{patientEdit.city::input}}" label="City"></paper-input>
                         <paper-input id="editStateInput" type="text" name="state"
-                                     value="{{patient.state::input}}" required label="State"></paper-input>
+                                     value="{{patientEdit.state::input}}" required label="State"></paper-input>
                         <paper-input id="editZipCodeInput" type="text" name="zip" required
-                                     label="ZIP Code" value="{{patient.zip::input}}"></paper-input>
+                                     label="ZIP Code" value="{{patientEdit.zip::input}}"></paper-input>
                     </div>
                 </div>
                 <div class="buttons">
@@ -320,14 +317,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel"
                                input-date="{{patient.birthdate}}" id="editDate"
                                date="{{patient.birthdate}}"></app-datepicker-dialog>
+        <paper-toast id="patientToast" text="{{toastMessage}}"></paper-toast>
     </template>
     <script>
         function _submit(event) {
             $('#addPatientForm').submit()
         }
-        //        function _submitEdit(event) {
-        //            $('#editPatientForm').submit();
-        //        }
     </script>
     <script>
 
@@ -341,22 +336,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: Object,
                     value: null
                 },
+                patientEdit: {
+                    type: Object,
+                    value: null
+                },
                 selected: String,
                 errorMessage: {
                     type: String,
                     notify: true
                 },
-                data: Object
+                toastMessage: String,
+                dataQuery: {
+                    type: Array,
+                    observer: '_testQuery'
+                },
+                tempIndex: Number
             },
 
             listeners: {
                 'iron-form-submit': 'addPatient'
             },
 
-            _updatePatient: function (e) {
-                this.patient = e.model.item;
+            _testQuery: function () {
+                this.$.patientList._render();
             },
 
+            _concat: function (fN, lN) {
+                return fN + ' ' + lN;
+            },
+            _updatePatient: function (e) {
+                var temp = e.model.item;
+                this.patient = temp;
+                this.tempIndex = e.model.index;
+            },
             testShow: function () {
                 console.log(this.selected);
             },
@@ -367,6 +379,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             _editPatient: function () {
                 this.$.editPatientDialog.open();
+                this.patientEdit = this.patient;
+            },
+            _computeSelected: function (gender) {
+                if (gender == 'Female')
+                    return 0;
+                else if (gender == 'Male')
+                    return 1
+                else
+                    return 2
             },
 
             addPatient: function () {
@@ -375,22 +396,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.$.document.data = data;
                 this.$.document.save('/patients/').then(function () {
                     document.querySelector('#addPatientDialog').close();
+                    document.querySelector('patient-page').toastMessage = "Patient has been added!";
+                    document.querySelector('#patientToast').open();
                 }, function () {
-                    document.querySelector('patient-page').errorMessage = 'Something seems to have gone wrong. Please try again.'
-                    document.querySelector('#errorDialog');
+                    document.querySelector('patient-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#patientToast').open();
                 })
             },
             _saveEdit: function () {
-                var key = this.patient.$key;
-                delete this.patient.$key;
-                this.$.document.data = this.patient;
-//                var key = this.patient.$key;
+                var key = this.patientEdit.$key;
+                var tempData = $("#editPatientForm :input").serializeObject();
+                tempData.gender = this.$.editGender.value;
+                this.$.document.data = tempData;
                 this.$.document.save('/patients/', key).then(function () {
                     document.querySelector('#editPatientDialog').close();
-                    document.querySelector('#patientList').notifyResize();
+                    document.querySelector('patient-page').toastMessage = "Patient has been updated!";
+                    document.querySelector('#patientToast').open();
+                    document.querySelector('patient-page').dirtyCheck();
                 }, function () {
-                    document.querySelector('patient-page').errorMessage = 'Something seems to have gone wrong. Please try again.'
-                    document.querySelector('#errorDialog');
+                    document.querySelector('patient-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#patientToast').open();
                 })
             },
             openDate: function () {
@@ -398,6 +423,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
             editDate: function () {
                 this.$.editDate.open();
+            },
+            dirtyCheck: function () {
+                this.async(function () {
+                    this.patient = null;
+                    this.patientEdit = null;
+                    var temp = this.dataQuery;
+                    this.set('dataQuery', []);
+                    this.set('dataQuery', temp);
+                }, 500)
             }
         });
 
