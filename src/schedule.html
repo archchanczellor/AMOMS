@@ -11,11 +11,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="stylesheet" href="../bower_components/fullcalendar/dist/fullcalendar.min.css">
 <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript" src="../bower_components/moment/min/moment.min.js"></script>
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <script type="text/javascript" src="../bower_components/fullcalendar/dist/fullcalendar.min.js"></script>
-
 <dom-module id="schedule-page">
 
     <template>
@@ -29,31 +31,80 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             #calendar {
                 padding: 15px 20px;
                 background: white;
+                max-height: 80vh;
+                max-width: 70vw;
             }
 
-            .fc-button {
+            .center-calendar {
+                @apply(--layout-horizontal);
+                @apply(--layout-center-center);
+            }
 
+            .center-button {
+                @apply(--layout-vertical);
+                @apply(--layout-center;)
+                margin: 25px 0;
+            }
+
+            .add-event-button {
+                color: white;
+                background-color: #2196F3;
             }
 
         </style>
-
-        <paper-material id="calendar"></paper-material>
-
+        <div class="center-button">
+            <paper-button on-tap="openDialog" class="add-event-button">Add Event</paper-button>
+        </div>
+        <div class="center-calendar">
+            <paper-material id="calendar"></paper-material>
+        </div>
+        <paper-dialog id="addEventDialog"
+                      no-cancel-on-outside-click
+                      class="paper-date-picker-dialog"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <div>Add Event</div>
+            <input id="title" placeholder="title" type="text">
+            <input id="eventDate" placeholder="mm/dd/yyy" type="date">
+            <paper-button dialog-dismiss>close</paper-button>
+            <paper-button on-tap="saveNewEvent">Save</paper-button>
+        </paper-dialog>
     </template>
     <script>
         $(document).ready(function () {
             $('#calendar').fullCalendar({
-                weekends: false, // Hide weekends
-                // put your options and callbacks here
+                weekends: false,
+                height: 650,
+                width: 650,
+                defaultView: 'agendaWeek',
+                editable: true,
+                eventClick: function(calEvent, jsEvent, view) {
+
+                    alert('Event: ' + calEvent.title);
+                    alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
+                    alert('View: ' + view.name);
+                }
             })
         });
+
     </script>
     <script>
 
         Polymer({
-
-            is: 'schedule-page'
-
+            is: 'schedule-page',
+            openDialog: function () {
+                this.$.addEventDialog.open();
+            },
+            saveNewEvent: function() {
+                var someTitle = this.$.title.value;
+                var eventDate = this.$.eventDate.value;
+                var newEvent = {
+                    title: someTitle,
+                    start: eventDate
+                }
+                $('#calendar').fullCalendar( 'renderEvent', newEvent , 'stick');
+                this.$.addEventDialog.close();
+            }
         });
 
     </script>

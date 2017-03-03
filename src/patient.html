@@ -64,6 +64,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
 
             .patient-content {
+                @apply(--layout-horizontal);
                 max-height: 35vh;
                 -webkit-transition: max-height .25s;
                 -moz-transition: max-height .25s;
@@ -148,15 +149,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             #addPatientButton {
                 background-color: #2196F3;
                 color: white;
+                max-height: 50px;
+                margin-top: 12px;
             }
 
             .horizontal-justified {
                 @apply(--layout-justified);
             }
 
-            .edit-patient-button {
+            .delete-patient-button {
                 color: white;
                 background-color: #F44336;
+            }
+            .edit-patient-button {
+                color: white;
+                background-color: #FF5722;
             }
 
             .class[hidden] {
@@ -180,32 +187,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <paper-material class="patient-info" elevation="1">
                         <div class="horizontal-justified horizontal-layout">
                             <h1>Patient Info</h1>
-                            <div hidden$="[[!patient]]">
-                                <paper-button class="edit-patient-button" on-tap="_editPatient">Edit</paper-button>
+                            <div hidden$="[[!patient]]" class="justify-right">
+                                <paper-button raised class="edit-patient-button" on-tap="_editPatient">Edit</paper-button>
+                                <paper-button raised class="delete-patient-button" on-tap="_deletePatient">Delete</paper-button>
                             </div>
                         </div>
                         <div class="patient-content">
-                            <div>Name: [[patient.firstName]] [[patient.lastName]]</div>
-                            <div>Phone: [[patient.phoneNumber]]</div>
-                            <div>Email: [[patient.email]]</div>
-                            <div>Gender: [[patient.gender]]</div>
-                            <div>Birthdate: [[patient.birthdate]]</div>
-                            <div>Street: [[patient.streetAddress1]]</div>
-                            <template is="if" if="[[patient.streetAddress2]]">
-                                <div>Street 2: [[patient.streetAddress2]]</div>
-                            </template>
-                            <div>State: [[patient.state]]</div>
-                            <div>City: [[patient.city]]</div>
-                            <div>ZIP: [[patient.zip]]</div>
+                            <div style="padding-right: 20px;">
+                                <div>Name: [[patient.firstName]] [[patient.lastName]]</div>
+                                <div>Phone: [[patient.phoneNumber]]</div>
+                                <div>Email: [[patient.email]]</div>
+                                <div>Gender: [[patient.gender]]</div>
+                                <div>Birthdate: [[patient.birthdate]]</div>
+                            </div>
+                            <div style="padding-left: 20px;">
+                                <div>Street: [[patient.streetAddress1]]</div>
+                                <template is="if" if="[[patient.streetAddress2]]">
+                                    <div>Street 2: [[patient.streetAddress2]]</div>
+                                </template>
+                                <div>State: [[patient.state]]</div>
+                                <div>City: [[patient.city]]</div>
+                                <div>ZIP: [[patient.zip]]</div>
+                            </div>
                         </div>
                     </paper-material>
                 </div>
-                <div class="justify-right">
-                    <paper-button id="addPatientButton" on-tap="openDialog">Add Patient</paper-button>
-                </div>
             </div>
             <paper-material id="scrollingRegion">
-                <h1 class="patients-title">Patients</h1>
+                <div class="horizontal-justified horizontal-layout">
+                    <h1 class="patients-title">Patients</h1>
+                    <paper-button id="addPatientButton" raised on-tap="openDialog">Add Patient</paper-button>
+                </div>
                 <template is="dom-repeat" items="{{dataQuery}}" id="patientList">
                     <paper-item class="itemInfo" on-tap="_updatePatient">
                         <paper-item-body two-line>
