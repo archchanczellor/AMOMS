@@ -1,0 +1,54 @@
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="users-admin">
+
+    <template>
+        <style include="shared-styles">
+            :host {
+                display: block;
+                height: 100vh;
+            }
+
+            paper-material {
+                height: 150px;
+                width: 200px;
+            }
+
+            .center-page {
+                height: 75vh;
+                @apply(--layout-horizontal);
+                @apply(--layout-center-center);
+            }
+
+            .center-item {
+                height: 100%;
+                @apply(--layout-horizontal);
+                @apply(--layout-center-center);
+            }
+            paper-button {
+                color: white;
+                background-color: blue;
+            }
+        </style>
+        <div class="center-page">
+            <paper-material elevation="5">
+                <div class="center-item">
+                    <paper-button raised on-tap="addUser">Add User</paper-button>
+                </div>
+            </paper-material>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'users-admin',
+            addUser: function () {
+                alert('Fix this Josh')
+            },
+            saveUser: function () {
+                alert('Seriously fix this')
+            }
+        });
+    </script>
+</dom-module>
