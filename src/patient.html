@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/bwt-datatable/bwt-datatable.html">
 <!--<link rel="import" href="../bower_components/paper-menu/paper-menu.html">-->
 <!--<link rel="import" href="../bower_components/paper-menu/paper-submenu.html">-->
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
@@ -161,6 +162,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 color: white;
                 background-color: #F44336;
             }
+
             .edit-patient-button {
                 color: white;
                 background-color: #FF5722;
@@ -174,13 +176,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <firebase-query
                 id="queryPatients"
                 path="/patients"
-                data="{{dataQuery}}">
-        </firebase-query>
+                data="{{dataQuery}}"></firebase-query>
+        <firebase-query
+            id="queryNotes"
+            path="/patients/[[uid]]/notes/"
+            data="{{patientNotes}}"></firebase-query>
         <firebase-document
                 id="document"
                 path="/patients/"
-                data="{{patientData}}">
-        </firebase-document>
+                data="{{patientData}}"></firebase-document>
         <div class="horizontal-around">
             <div>
                 <div class="center">
@@ -188,8 +192,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <div class="horizontal-justified horizontal-layout">
                             <h1>Patient Info</h1>
                             <div hidden$="[[!patient]]" class="justify-right">
-                                <paper-button raised class="edit-patient-button" on-tap="_editPatient">Edit</paper-button>
-                                <paper-button raised class="delete-patient-button" on-tap="_deletePatient">Delete</paper-button>
+                                <paper-button raised class="edit-patient-button" on-tap="_editPatient">Edit
+                                </paper-button>
+                                <!--<paper-button raised class="delete-patient-button" on-tap="_deletePatient">Delete</paper-button>-->
                             </div>
                         </div>
                         <div class="patient-content">
@@ -209,6 +214,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 <div>City: [[patient.city]]</div>
                                 <div>ZIP: [[patient.zip]]</div>
                             </div>
+                        </div>
+                    </paper-material>
+                </div>
+                <div class="center">
+                    <div class="spacer"></div>
+                    <paper-material class="patient-info" hidden$="[[!patient]]" elevation="1">
+                        <div class="horizontal-justified horizontal-layout">
+                            <h1>Notes</h1>
+                            <div hidden$="[[!patient]]" class="justify-right">
+                                <paper-button raised class="edit-patient-button" on-tap="_openNoteDialog">
+                                    <iron-icon icon="add"></iron-icon>
+                                    Add
+                                </paper-button>
+                            </div>
+                        </div>
+                        <div hidden$="[[!notes]]">
+                            <div class="patient-info">No Notes</div>
+                        </div>
+                        <div hidden$="[[notes]]">
+                            <paper-datatable data="{{notes}}" selectable>
+                                <paper-datatable-column header="Date" property="date" sortable>
+                                </paper-datatable-column>
+                                <paper-datatable-column header="Note" property="note" sortable>
+                                </paper-datatable-column>
+                                <paper-datatable-column header="Added By" property="creator" sortable>
+                                </paper-datatable-column>
+                            </paper-datatable>
                         </div>
                     </paper-material>
                 </div>
@@ -320,6 +352,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </div>
             </form>
         </paper-dialog>
+        <paper-dialog id="addPatientNotes"
+                      no-cancel-on-outside-click
+                      class="paper-date-picker-dialog"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <h2>Add Notes</h2>
+            <paper-input value="{{newNote::input}}"></paper-input>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Close</paper-button>
+                <paper-button on-tap="_saveNote">Save</paper-button>
+            </div>
+        </paper-dialog>
         <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="datePicker"
                                date="{{birthdate}}"></app-datepicker-dialog>
         <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel"
@@ -356,16 +400,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 toastMessage: String,
                 dataQuery: {
                     type: Array,
-                    observer: '_testQuery'
+                    observer: '_updateQuery'
                 },
-                tempIndex: Number
+                tempIndex: Number,
+                uid: String,
+                newNote: String,
+                notes: {
+                    type: Array,
+                    value: []
+                },
             },
 
             listeners: {
                 'iron-form-submit': 'addPatient'
             },
 
-            _testQuery: function () {
+            _updateQuery: function () {
                 this.$.patientList._render();
             },
 
@@ -373,9 +423,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 return fN + ' ' + lN;
             },
             _updatePatient: function (e) {
-                var temp = e.model.item;
-                this.patient = temp;
-                this.tempIndex = e.model.index;
+                this.patient = e.model.item
+                this.tempIndex = e.model.index
+                this.uid = this.patient.$key
+                this.notes = $.makeArray(this.patient.notes)
+            },
+            _openNoteDialog: function () {
+                this.$.addPatientNotes.open();
             },
             testShow: function () {
                 console.log(this.selected);
@@ -426,6 +480,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     document.querySelector('#patientToast').open();
                 })
             },
+            _saveNote: function () {
+                var tempData = {
+                    date: this._getTodaysDate(),
+                    note: this.newNote,
+                    creator: this.user.email
+                }
+                this.$.document.data = tempData;
+                this.$.document.save('/patients/'+ this.uid + '/notes').then(function () {
+                    console.log('success')
+                }, function () {
+                    console.log('failure')
+                })
+            },
             openDate: function () {
                 this.$.datePicker.open();
             },
@@ -440,6 +507,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     this.set('dataQuery', []);
                     this.set('dataQuery', temp);
                 }, 500)
+            },
+            _getTodaysDate: function () {
+                var today = new Date();
+                var dd = today.getDate();
+                var mm = today.getMonth() + 1; //January is 0!
+                var yyyy = today.getFullYear();
+
+                if (dd < 10) {
+                    dd = '0' + dd
+                }
+
+                if (mm < 10) {
+                    mm = '0' + mm
+                }
+
+                return mm + '/' + dd + '/' + yyyy;
+
             }
         });
 
