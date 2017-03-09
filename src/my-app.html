@@ -96,6 +96,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <div hidden$="[[!user]]" name="users">
                         <a href="/users" drawer-toggle>Admin</a>
                     </div>
+                    <div hidden$="[[!user]]" name="prescription">
+                        <a href="/prescription">Create a Prescription</a>
+                    </div>
+                    
                 </iron-selector>
             </app-drawer>
 
@@ -117,6 +121,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <schedule-page hidden$="[[!user]]" name="schedule"></schedule-page>
                     <patient-page hidden$="[[!user]]" name="patient" user="[[user]]" error-message="{{errorMessage}}"></patient-page>
                     <users-admin hidden$="[[!user]]" name="users"></users-admin>
+                    <prescription-page name="prescription"></prescription-page>
                     <my-view404 name="view404"></my-view404>
                 </iron-pages>
 
