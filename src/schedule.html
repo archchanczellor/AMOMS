@@ -87,17 +87,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             is: 'schedule-page',
             properties: {
                 appointments: {
-                    type: Array,
-                    observer: 'dataChanged'
+                    type: Array
                 }
             },
 
-            dataChanged: function (newData, oldData) {
-                console.log(newData)
-                console.log(oldData)
-                this.async(function () {
-                    $('#calendar').fullCalendar('renderEvents', this.appointments)
-                }, 2000)
+            observers: [
+                '_appointmentsChange(appointments.splices)'
+            ],
+
+            _appointmentsChange(appointments) {
+                if(appointments) {
+                    $("#calendar").fullCalendar( 'removeEvents')
+                    $("#calendar").fullCalendar('addEventSource', this.appointments)
+                }
             },
 
             openDialog: function () {
@@ -127,6 +129,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         alert('Event: ' + calEvent.title);
                         alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
                         alert('View: ' + view.name);
+                    },
+                    eventRender: function(event, element) {
+                        console.log(event);
                     }
                 })
             }
