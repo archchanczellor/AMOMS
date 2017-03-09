@@ -42,8 +42,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             .center-button {
                 @apply(--layout-vertical);
-                @apply(--layout-center;)
-                margin: 25px 0;
+                @apply(--layout-center;
+            ) margin: 25 px 0;
             }
 
             .add-event-button {
@@ -51,7 +51,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 background-color: #2196F3;
             }
 
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+                margin-top: 20px;
+            }
+
         </style>
+
+        <firebase-query id="queryAppointments" path="/appointments" data="{{appointments}}"></firebase-query>
+        <firebase-document id="docAppointments" path="/appointments/" data="{{newApp}}"></firebase-document>
+
         <div class="center-button">
             <paper-button on-tap="openDialog" class="add-event-button">Add Appointment</paper-button>
         </div>
@@ -63,6 +73,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       class="paper-date-picker-dialog"
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
+<<<<<<< HEAD
             <div>Add Appointment</div>
             <input id="title" placeholder="Appointment Title" type="text"> <br />
             <input id="eventDate" placeholder="mm/dd/yyyy hh:mm:" type="datetime-local"> <br />
@@ -85,19 +96,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     alert('Title: ' + calEvent.title);
                     alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
                     alert('View: ' + view.name);
-                }
-            })
-        });
-
-    </script>
+=======
+            <div>Add Event</div>
+            <paper-input id="title" label="Title"></paper-input>
+            <paper-input id="eventDate" placeholder="yyyy-mm-dd"></paper-input>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button on-tap="saveNewEvent">Save</paper-button>
+            </div>
+        </paper-dialog>
+    </template>
     <script>
-
         Polymer({
             is: 'schedule-page',
+            properties: {
+                appointments: {
+                    type: Array,
+                    observer: 'dataChanged'
+>>>>>>> origin/master
+                }
+            },
+
+            dataChanged: function (newData, oldData) {
+                console.log(newData)
+                console.log(oldData)
+                this.async(function () {
+                    $('#calendar').fullCalendar('renderEvents', this.appointments)
+                }, 2000)
+            },
+
             openDialog: function () {
                 this.$.addEventDialog.open();
             },
-            saveNewEvent: function() {
+
+            saveNewEvent: function () {
                 var someTitle = this.$.title.value;
                 var eventDate = this.$.eventDate.value;
 				var description = this.$.eventDescription.value;
@@ -107,8 +139,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 					
 					
                 }
-                $('#calendar').fullCalendar( 'renderEvent', newEvent , 'stick');
+                this.$.docAppointments.data = newEvent;
+                this.$.docAppointments.save('/appointments/');
                 this.$.addEventDialog.close();
+            },
+            ready: function () {
+                $('#calendar').fullCalendar({
+                    weekends: false,
+                    height: 650,
+                    width: 650,
+                    defaultView: 'agendaWeek',
+                    editable: true,
+                    events: this.appointments,
+                    eventClick: function (calEvent, jsEvent, view) {
+                        alert('Event: ' + calEvent.title);
+                        alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
+                        alert('View: ' + view.name);
+                    }
+                })
             }
         });
 
