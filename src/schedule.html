@@ -74,12 +74,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
             <div>Add Appointment</div>
-            <input id="title" placeholder="Appointment Title" type="text"> <br />
-            <input id="eventDate" placeholder="mm/dd/yyyy hh:mm:" type="datetime-local"> <br />
-			<input id="practName" placeholder="Practioner Name:" type="text"> <br />
-			<input id="eventDescription" placeholder="Description" type="text">
-            <paper-button dialog-dismiss>close</paper-button>
-            <paper-button on-tap="saveNewEvent">Save</paper-button>
+            <paper-input id="title" label="Appointment Title"></paper-input>
+            <paper-input id="eventDate" label="yyyy-mm-dd" type="datetime-local"></paper-input>
+            <paper-input id="practName" placeholder="Practioner Name:" type="text"></paper-input>
+            <paper-input id="eventDescription" placeholder="Description" type="text"></paper-input>
+            <div class="buttons">
+                <paper-button dialog-dismiss>close</paper-button>
+                <paper-button on-tap="saveNewEvent">Save</paper-button>
+            </div>
         </paper-dialog>
     </template>
     <script>
@@ -96,8 +98,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ],
 
             _appointmentsChange(appointments) {
-                if(appointments) {
-                    $("#calendar").fullCalendar( 'removeEvents')
+                if (appointments) {
+                    $("#calendar").fullCalendar('removeEvents')
                     $("#calendar").fullCalendar('addEventSource', this.appointments)
                 }
             },
@@ -109,9 +111,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             saveNewEvent: function () {
                 var someTitle = this.$.title.value;
                 var eventDate = this.$.eventDate.value;
-				var description = this.$.eventDescription.value;
+                var description = this.$.eventDescription.value;
                 var newEvent = {
-                    title: someTitle ,
+                    title: someTitle,
                     start: eventDate
                 }
                 this.$.docAppointments.data = newEvent;
