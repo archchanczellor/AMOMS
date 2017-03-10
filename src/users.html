@@ -31,7 +31,174 @@
                 color: white;
                 background-color: blue;
             }
+            .center {
+                @apply(--layout-vertical);
+                @apply(--layout-center);
+            }
+
+            .horizontal-around {
+                @apply(--layout-horizontal);
+                @apply(--layout-around-justified);
+            }
+
+            .user-info {
+                background: white;
+                padding: 25px 35px;
+                border-radius: 4px;
+                min-width: 60vw;
+                height: auto;
+            }
+
+            .user-content {
+                @apply(--layout-horizontal);
+                max-height: 35vh;
+                -webkit-transition: max-height .25s;
+                -moz-transition: max-height .25s;
+                -ms-transition: max-height .25s;
+                -o-transition: max-height .25s;
+                transition: max-height .25s;
+            }
+
+            .spacer {
+                height: 5vh;
+            }
+
+            .itemInfo {
+                position: relative;
+            }
+
+            .itemName {
+                padding: 0 5px 0 5px;
+            }
+
+            #scrollingRegion {
+                border-radius: 4px;
+                overflow-y: hidden;
+                max-height: 79vh;
+                width: 20vw;
+                background-color: #fff;
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+                scroll-behavior: smooth;
+            }
+
+            .justifyItems {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+                width: 18vw;
+            }
+
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
+
+            .horizontalLayout {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+            }
+
+            #firstName, #birthdate {
+                padding-right: 5px;
+            }
+
+            #lastName, #gender {
+                padding-left: 5px;
+            }
+
+            .horizontal-layout {
+                @apply(--layout-horizontal);
+            }
+
+            .vertical-layout {
+                @apply(--layout-vertical);
+            }
+
+            .form-left {
+                padding-right: 10px;
+                width: 50%;
+            }
+
+            .form-right {
+                width: 50%;
+            }
+
+            .justify-right {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+                padding: 20px 0;
+            }
+
+            .user-title {
+                padding: 0 20px;
+            }
+
+            #addUserButton {
+                background-color: #2196F3;
+                color: white;
+                max-height: 50px;
+                margin-top: 12px;
+            }
+
+            .horizontal-justified {
+                @apply(--layout-justified);
+            }
+
+            .delete-user-button {
+                color: white;
+                background-color: #F44336;
+            }
+
+            .edit-user-button {
+                color: white;
+                background-color: #FF5722;
+            }
+
+            .class[hidden] {
+                display: none;
+            }
         </style>
+
+        <firebase-query
+                id="queryUsers"
+                path="/users"
+                data="{{dataQuery}}"></firebase-query>
+        <firebase-document
+                id="document"
+                path="/users/"
+                data="{{userData}}"></firebase-document>
+
+        <firebase-app auth-domain="amoms-9ecf6.firebaseapp.com"
+        database-url="https://amoms-9ecf6.firebaseio.com"
+        api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI">
+        </firebase-app>
+
+        <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError">
+        </firebase-auth>
+
+        <div class="horizontal-around">
+            <div>
+                <div class="center">
+                    <paper-material class="user-info" elevation="1">
+                        <div class="horizontal-justified horizontal-layout">
+                            <h1>User Info</h1>
+                            <div hidden$="[[!user]]" class="justify-right">
+                                <paper-button raised class="edit-user-button" on-tap="_editUser">Edit
+                                </paper-button>
+                                <!--<paper-button raised class="delete-user-button" on-tap="_deletePatient">Delete</paper-button>-->
+                            </div>
+                        </div>
+                        <div class="user-content">
+                            <div style="padding-right: 20px;">
+                                <div>Name: [[user.firstName]] [[user.lastName]]</div>
+                                <div>Email: [[user.email]]</div>
+                                <div>password: [[user.password]]</div>
+                                <div>role: [[user.role]]</div>
+                            </div>
+                        </div>
+                    </paper-material>
+                </div>
+
+        <!--
         <div class="center-page">
             <paper-material elevation="5">
                 <div class="center-item">
@@ -39,15 +206,132 @@
                 </div>
             </paper-material>
         </div>
+      -->
+        <div class="spacer"></div>
+        <paper-dialog id="addUserDialog"
+                      no-cancel-on-outside-click
+                      class=""
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <form is="iron-form" id="addUserForm">
+                <h2>Add User</h2>
+                <div class="horizontal-layout">
+                    <div class="vertical-layout form-left">
+                        <div class="horizontalLayout">
+                            <paper-input id="firstName" name="firstName" label="First Name" autofocus
+                                         required></paper-input>
+                            <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
+                        </div>
+                        <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
+                        <paper-dropdown-menu label="role" id="editRole" name="Role" required>
+                            <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.role)}}">
+                                <paper-item name="administrator" value="administrator">Administrator</paper-item>
+                                <paper-item name="secretary" value="secretary">Secretary</paper-item>
+                                <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
+                            <paper-menu>
+                        <paper-dropdown-menu>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Close</paper-button>
+                    <paper-button onclick="_submit()">Submit</paper-button>
+                </div>
+            </form>
+        </paper-dialog>
+        <paper-toast id="userToast" text="{{toastMessage}}"></paper-toast>
     </template>
+    <script>
+      function _submit(event) {
+        $('#addUserForm').submit()
+      }
+    </script>
     <script>
         Polymer({
             is: 'users-admin',
+
+            properties: {
+              userEmail: Object,
+              user: {
+                type: Object,
+                value: null
+              },
+              userEdit: {
+                type: Object,
+                value: null
+              },
+              selected: String,
+              errorMessage: {
+                type: String,
+                notify: true
+              },
+              toastMessage: String,
+              dataQuery: {
+                type: Array,
+                observer: '_updateQuery'
+              },
+              tempIndex: Number,
+              uid: String
+            },
+
+            listeners: {
+                'iron-form-submit': 'addUser'
+            },
+
             addUser: function () {
-                alert('Fix this Josh')
+              var data = $("#addUserForm :input").serializeObject();
+              data.role = this.$.role.value
+              data.email = this.$.email.value
+              data.password = this.$.password.value
+              this.$.document.data = data;
+              this.$.auth.createUserWithEmailAndPassword(data.email,data.password)
+            //  .then(function(toastMessage).catch(function())
+              this.$.document.save('/users/').then(function () {
+                  document.querySelector('#addUserDialog').close();
+                  document.querySelector('users-admin').toastMessage = "User has been added!";
+                  document.querySelector('#userToast').open();
+              }, function () {
+                  document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                  document.querySelector('#userToast').open();
+              })
             },
             saveUser: function () {
-                alert('Seriously fix this')
+              var key = this.userEdit.$key;
+              var tempData = $("#editUserForm :input").serializeObject();
+              tempData.gender = this.$.editRole.value;
+              this.$.document.data = tempData;
+              this.$.document.save('/users/', key).then(function () {
+                  document.querySelector('#editUserDialog').close();
+                  document.querySelector('users-admin').toastMessage = "User has been updated!";
+                  document.querySelector('#userToast').open();
+                  document.querySelector('users-admin').dirtyCheck();
+              }, function () {
+                  document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                  document.querySelector('#userToast').open();
+              })
+            },
+            _editUser: function () {
+                this.userEdit = this.patient;
+                this.$.editUserDialog.open();
+            },
+            _computeSelected: function (role) {
+                if (role == 'administrator')
+                    return 0;
+                else if (role == 'secretary')
+                    return 1
+                else
+                    return 2
+            },
+            _updateQuery: function () {
+//                this.$.patientList._render();
+            },
+            dirtyCheck: function () {
+                this.async(function () {
+                    this.user = null;
+                    this.userEdit = null;
+                    var temp = this.dataQuery;
+                    this.set('dataQuery', []);
+                    this.set('dataQuery', temp);
+                }, 500)
             }
         });
     </script>
