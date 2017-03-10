@@ -13,14 +13,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
-<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
 <link rel="stylesheet" href="../bower_components/fullcalendar/dist/fullcalendar.min.css">
 <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript" src="../bower_components/moment/min/moment.min.js"></script>
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-time-picker/paper-time-picker.html">
 <script type="text/javascript" src="../bower_components/fullcalendar/dist/fullcalendar.min.js"></script>
+<link rel="import" href="../bower_components/app-datepicker/app-datepicker-dialog.html">
 <dom-module id="schedule-page">
 
     <template>
@@ -53,6 +51,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 color: white;
                 background-color: #2196F3;
             }
+			
+			.edit-appointment-button {
+                color: white;
+                background-color: #FF5722;
+                max-height: 50px;
+            }
+			
+			.horizontal-layout {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+			
+			.class[hidden] {
+                display: none;
+            }
 
             .buttons {
                 @apply(--layout-horizontal);
@@ -66,8 +79,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <firebase-document id="docAppointments" path="/appointments/" data="{{newApp}}"></firebase-document>
 
         <div class="center-button">
-            <paper-button on-tap="openDialog" class="add-event-button">Add Appointment</paper-button>
-            <paper-button on-tap="_openTimeDialog" class="add-event-button">Time</paper-button>
+            <paper-button raised on-tap="openDialog" class="add-event-button">Add Appointment</paper-button>
         </div>
         <div class="center-calendar">
             <paper-material id="calendar"></paper-material>
@@ -79,22 +91,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       exit-animation="fade-out-animation">
             <div>Add Appointment</div>
             <paper-input id="title" label="Appointment Title"></paper-input>
-            <paper-input id="eventDate" label="yyyy-mm-dd" type="datetime-local"></paper-input>
-            <paper-input id="practName" placeholder="Practioner Name:" type="text"></paper-input>
+            <paper-input name="eventDate" id="eventDate" label="Event Date" value="{{eventDate}}" on-tap="openDate" required></paper-input>
+            <paper-input id="practName" label="Practioner" placeholder="Practioner Name:" type="text"></paper-input>
+			<paper-input id="patientName" label="Patient" placeholder="Patient Name:" type="text"></paper-input>
             <paper-input id="eventDescription" placeholder="Description" type="text"></paper-input>
             <div class="buttons">
                 <paper-button dialog-dismiss>close</paper-button>
                 <paper-button on-tap="saveNewEvent">Save</paper-button>
             </div>
         </paper-dialog>
-        <paper-dialog id="timeDialog" class="paper-time-picker-dialog"
-                      on-iron-overlay-closed="dismissDialog">
-            <paper-time-picker id="timePicker" time="[[time]]"></paper-time-picker>
-            <div class="buttons">
-                <paper-button dialog-dismiss>Cancel</paper-button>
-                <paper-button dialog-confirm>OK</paper-button>
-            </div>
-        </paper-dialog>
+		<app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="datePicker"
+                               date="{{eventDate}}"></app-datepicker-dialog>
+
+							   
+						   
     </template>
     <script>
         Polymer({
@@ -119,14 +129,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             openDialog: function () {
                 this.$.addEventDialog.open();
             },
+			
+			openDate: function () {
+				this.$.datePicker.open();
+				},
 
             saveNewEvent: function () {
                 var someTitle = this.$.title.value;
                 var eventDate = this.$.eventDate.value;
-                var description = this.$.eventDescription.value;
                 var newEvent = {
                     title: someTitle,
-                    start: eventDate
+                    start: eventDate,
                 }
                 this.$.docAppointments.data = newEvent;
                 this.$.docAppointments.save('/appointments/');
@@ -141,14 +154,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     editable: true,
                     events: this.appointments,
                     eventClick: function (calEvent, jsEvent, view) {
-                        alert('Event: ' + calEvent.title);
-                        alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
-                        alert('View: ' + view.name);
+					
                     }
                 })
-            },
-            _openTimeDialog: function () {
-                this.$.timeDialog.open();
             }
         });
 
