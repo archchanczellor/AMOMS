@@ -13,9 +13,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-time-picker/paper-time-picker.html">
 <link rel="stylesheet" href="../bower_components/fullcalendar/dist/fullcalendar.min.css">
 <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript" src="../bower_components/moment/min/moment.min.js"></script>
+<script type="text/javascript" src="../bower_components/moment/min/moment-with-locales.min.js"></script>
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <script type="text/javascript" src="../bower_components/fullcalendar/dist/fullcalendar.min.js"></script>
 <link rel="import" href="../bower_components/app-datepicker/app-datepicker-dialog.html">
@@ -51,19 +53,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 color: white;
                 background-color: #2196F3;
             }
-			
-			.edit-appointment-button {
+
+            .edit-appointment-button {
                 color: white;
                 background-color: #FF5722;
                 max-height: 50px;
             }
-			
-			.horizontal-layout {
+
+            .horizontal-layout {
                 @apply(--layout-horizontal);
                 @apply(--layout-center);
             }
-			
-			.class[hidden] {
+
+            .class[hidden] {
                 display: none;
             }
 
@@ -91,20 +93,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       exit-animation="fade-out-animation">
             <div>Add Appointment</div>
             <paper-input id="title" label="Appointment Title"></paper-input>
-            <paper-input name="eventDate" id="eventDate" label="Event Date" value="{{eventDate}}" on-tap="openDate" required></paper-input>
+            <paper-input name="eventDate" id="eventDate" label="Event Date" value="{{eventDate}}" on-tap="openDate"
+                         required></paper-input>
             <paper-input id="practName" label="Practioner" placeholder="Practioner Name:" type="text"></paper-input>
-			<paper-input id="patientName" label="Patient" placeholder="Patient Name:" type="text"></paper-input>
+            <paper-input id="patientName" label="Patient" placeholder="Patient Name:" type="text"></paper-input>
             <paper-input id="eventDescription" placeholder="Description" type="text"></paper-input>
+            <paper-input id="timeInput" label="Start Time" on-tap="openTimeDialog"
+                         value="[[time]]"></paper-input>
             <div class="buttons">
                 <paper-button dialog-dismiss>close</paper-button>
                 <paper-button on-tap="saveNewEvent">Save</paper-button>
             </div>
         </paper-dialog>
-		<app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="datePicker"
+        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="datePicker"
                                date="{{eventDate}}"></app-datepicker-dialog>
+        <paper-dialog id="timeDialog" class="paper-time-picker-dialog"
+                      on-iron-overlay-closed="dismissDialog">
+            <paper-time-picker id="timePicker" hour="0-24" time="{{time}}"></paper-time-picker>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm on-tap="testTime">OK</paper-button>
+            </div>
+        </paper-dialog>
 
-							   
-						   
     </template>
     <script>
         Polymer({
@@ -129,17 +140,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             openDialog: function () {
                 this.$.addEventDialog.open();
             },
-			
-			openDate: function () {
-				this.$.datePicker.open();
-				},
+
+            openDate: function () {
+                this.$.datePicker.open();
+            },
 
             saveNewEvent: function () {
+                var fixedDate = this.eventDate.replace(/\//g, '-');
                 var someTitle = this.$.title.value;
-                var eventDate = this.$.eventDate.value;
+                //Time format YYYY-DD-MMTHH:MM
+                //Time will be in 24 hour format.
+                //We need a function that can do this
                 var newEvent = {
                     title: someTitle,
-                    start: eventDate,
+                    start: fixedDate,
                 }
                 this.$.docAppointments.data = newEvent;
                 this.$.docAppointments.save('/appointments/');
@@ -154,9 +168,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     editable: true,
                     events: this.appointments,
                     eventClick: function (calEvent, jsEvent, view) {
-					
                     }
                 })
+            },
+            openTimeDialog: function() {
+                this.$.timeDialog.open()
             }
         });
 
