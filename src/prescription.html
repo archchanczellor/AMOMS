@@ -47,87 +47,79 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 padding: 10px;
             }
 
-			.buttons{                
-				background-color: #2196F3;
-				color: white;
-				left: 100px;
-			}
-			
+            .buttons {
+                background-color: #2196F3;
+                color: white;
+                left: 100px;
+            }
 
-
+            .prescription-submit {
+                padding: 25px;
+            }
         </style>
-		
 
-		<firebase-document
-			id="document"
-			path="/prescriptions/"
-			data="{{prescriptionData}}">
-		</firebase-document>
-		
+        <firebase-document
+                id="document"
+                path="/prescriptions/"
+                data="{{prescriptionData}}">
+        </firebase-document>
+
         <div class="horizontal-around">
             <div>
-
                 <div class="center">
-                    <paper-material class="prescripion-submit" elevation="1">
-						<form id="addPrescriptionForm">
-							<paper-input id="drugName" name= "drugName" label="Select a Drug" autofocus required></paper-input>
-							<paper-input id="drugAmount" name="drugAmount" label="Enter an Amount" autofocus required></paper-input>
-							<paper-input id="drugDirections" name="drugDirections" label="Enter Directions" autofocus required></paper-input>		 
-						</form>
-                    </paper-material>				
-				<div>
-				<paper-button class="buttons" id="addPrescriptionButton" onclick="_submit()">Add Prescription</paper-button> 
-					</div>
+                    <paper-material class="prescription-submit" elevation="1">
+                        <form id="addPrescriptionForm">
+                            <h2>Drug Prescription</h2>
+                            <paper-input id="drugName" name="drugName" label="Drug Name" autofocus
+                                         required></paper-input>
+                            <paper-input id="drugAmount" name="drugAmount" label="Dosage" autofocus
+                                         required></paper-input>
+                            <paper-input id="drugDirections" name="drugDirections" label="Directions" autofocus
+                                         required></paper-input>
+                        </form>
+                    </paper-material>
+                    <div>
+                        <paper-button class="buttons" id="addPrescriptionButton" on-tap="addPrescription">Add
+                            Prescription
+                        </paper-button>
+                    </div>
                 </div>
 
             </div>
         </div>
-	<paper-toast id="prescriptionToast" text="{{toastMessage}}"></paper-toast>	
+        <paper-toast id="prescriptionToast" text="{{toastMessage}}"></paper-toast>
     </template>
-	
+
     <script>
 
-        function _submit(event) {
-			
-			$('addPrescriptionForm').submit();
-        }
 
-		
     </script>
-	
+
     <script>
 
         Polymer({
 
             is: 'prescription-page',
 
-            properties: 
-			{
-				prescription: 
-				{
+            properties: {
+                prescription: {
                     type: Object,
                     value: null
-                },
-				
-				listeners: 
-				{
-					'iron-form-submit': 'addPrescription'
-				},
-				
-				addPrescription: function () {
-					var data = $("#addPrescriptionForm :input").serializeObject();
-					this.$.document.data = data;
-					this.$.document.save('/prescriptions/').then(function () {
-						document.querySelector('prescription-page').toastMessage = "Prescriptionhas been added!";
-						document.querySelector('#prescriptionToast').open();
-					}, function () {
-						document.querySelector('prescription-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-						document.querySelector('#prescriptionToast').open();
-					});
-				}
+                }
             },
 
-        });
+            addPrescription: function () {
+                var data = $("#addPrescriptionForm :input").serializeObject();
+                this.$.document.data = data;
+                this.$.document.save('/prescriptions/').then(function () {
+                    document.querySelector('prescription-page').toastMessage = "Prescription has been added!";
+                    document.querySelector('#prescriptionToast').open();
+                }, function () {
+                    document.querySelector('prescription-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#prescriptionToast').open();
+                });
+            }
+        })
 
     </script>
 
