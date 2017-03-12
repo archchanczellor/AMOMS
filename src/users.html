@@ -1,7 +1,25 @@
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="shared-styles.html">
-
+<script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-serialize-object/dist/jquery.serialize-object.min.js"></script>
 <dom-module id="users-admin">
 
     <template>
@@ -166,7 +184,7 @@
                 id="document"
                 path="/users/"
                 data="{{userData}}"></firebase-document>
-
+<!--
         <firebase-app auth-domain="amoms-9ecf6.firebaseapp.com"
         database-url="https://amoms-9ecf6.firebaseio.com"
         api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI">
@@ -174,7 +192,7 @@
 
         <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError">
         </firebase-auth>
-
+-->
         <div class="horizontal-around">
             <div>
                 <div class="center">
@@ -184,29 +202,29 @@
                             <div hidden$="[[!user]]" class="justify-right">
                                 <paper-button raised class="edit-user-button" on-tap="_editUser">Edit
                                 </paper-button>
+                                <div class="center-page">
+                                    <paper-material elevation="5">
+                                        <div class="center-item">
+                                            <paper-button raised on-tap="openDialog">Add User</paper-button>
+                                        </div>
+                                    </paper-material>
+                                </div>
                                 <!--<paper-button raised class="delete-user-button" on-tap="_deletePatient">Delete</paper-button>-->
                             </div>
                         </div>
-                        <div class="user-content">
+                        <template is="dom-repeat" items="{{userData}}">
+                          <div class="user-content">
                             <div style="padding-right: 20px;">
                                 <div>Name: [[user.firstName]] [[user.lastName]]</div>
                                 <div>Email: [[user.email]]</div>
                                 <div>password: [[user.password]]</div>
                                 <div>role: [[user.role]]</div>
                             </div>
-                        </div>
+                          </div>
+                        </template>
                     </paper-material>
                 </div>
 
-        <!--
-        <div class="center-page">
-            <paper-material elevation="5">
-                <div class="center-item">
-                    <paper-button raised on-tap="addUser">Add User</paper-button>
-                </div>
-            </paper-material>
-        </div>
-      -->
         <div class="spacer"></div>
         <paper-dialog id="addUserDialog"
                       no-cancel-on-outside-click
@@ -223,8 +241,8 @@
                             <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
                         </div>
                         <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
-                        <paper-dropdown-menu label="role" id="editRole" name="Role" required>
-                            <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.role)}}">
+                        <paper-dropdown-menu label="role" id="Role" name="Role" required>
+                            <paper-menu class="dropdown-content">
                                 <paper-item name="administrator" value="administrator">Administrator</paper-item>
                                 <paper-item name="secretary" value="secretary">Secretary</paper-item>
                                 <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
@@ -239,6 +257,39 @@
             </form>
         </paper-dialog>
         <paper-toast id="userToast" text="{{toastMessage}}"></paper-toast>
+        <paper-dialog id="editUserDialog"
+                      no-cancel-on-outside-click
+                      class=""
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <form is="iron-form" id="editUserForm">
+                <h2>Edit [[user.firstName]] [[user.lastName]]</h2>
+                <div class="horizontal-layout">
+                    <div class="vertical-layout form-left">
+                        <div class="horizontalLayout">
+                            <paper-input id="editFirst" name="firstName" label="First Name" autofocus
+                                         required value="{{userEdit.firstName::input}}"></paper-input>
+                            <paper-input id="editLast" name="lastName" label="Last Name"
+                              value="{{userEdit.lastName::input}}" required></paper-input>
+                        </div>
+                        <gold-email-input name="email" label="Email" validate
+                          value="{{userEdit.email::input}}" required></gold-email-input>
+                        <paper-dropdown-menu label="role" id="editRole" name="Role" required>
+                            <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.role)}}">
+                                <paper-item name="administrator" value="administrator">Administrator</paper-item>
+                                <paper-item name="secretary" value="secretary">Secretary</paper-item>
+                                <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
+                            <paper-menu>
+                        <paper-dropdown-menu>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Close</paper-button>
+                    <paper-button onclick="_saveUser()">Submit</paper-button>
+                </div>
+            </form>
+        </paper-dialog>
+        <paper-toast id="userToast" text="{{toastMessage}}"></paper-toast>
     </template>
     <script>
       function _submit(event) {
@@ -246,7 +297,9 @@
       }
     </script>
     <script>
+
         Polymer({
+
             is: 'users-admin',
 
             properties: {
@@ -266,7 +319,7 @@
               },
               toastMessage: String,
               dataQuery: {
-                type: Array,
+                type: Object,
                 observer: '_updateQuery'
               },
               tempIndex: Number,
@@ -323,6 +376,9 @@
             },
             _updateQuery: function () {
 //                this.$.patientList._render();
+            },
+            openDialog: function () {
+                this.$.addUserDialog.open();
             },
             dirtyCheck: function () {
                 this.async(function () {
