@@ -1,0 +1,301 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-time-picker/paper-time-picker.html">
+<link rel="stylesheet" href="../bower_components/fullcalendar/dist/fullcalendar.min.css">
+<script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="../bower_components/moment/min/moment.min.js"></script>
+<script type="text/javascript" src="../bower_components/moment/min/moment-with-locales.min.js"></script>
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/vaadin-combo-box/vaadin-combo-box.html">
+<script type="text/javascript" src="../bower_components/fullcalendar/dist/fullcalendar.min.js"></script>
+<link rel="import" href="../bower_components/app-datepicker/app-datepicker-dialog.html">
+<link rel="import" href="appointment-page.html">
+<dom-module id="schedule-page">
+
+    <template>
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+
+            #calendar {
+                padding: 15px 20px;
+                background: white;
+                max-height: auto;
+                max-width: auto;
+            }
+
+            .center-calendar {
+                @apply(--layout-horizontal);
+                @apply(--layout-center-center);
+            }
+
+            .center-button {
+                @apply(--layout-vertical);
+                @apply(--layout-center;
+            ) margin: 25 px 0;
+            }
+
+            .add-event-button {
+                color: white;
+                background-color: #2196F3;
+            }
+
+            .edit-appointment-button {
+                color: white;
+                background-color: #FF5722;
+                max-height: 50px;
+            }
+
+            .horizontal-layout {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .class[hidden] {
+                display: none;
+            }
+
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+                margin-top: 20px;
+            }
+
+        </style>
+
+        <firebase-query id="queryAppointments" path="/appointments" data="{{appointments}}"></firebase-query>
+        <firebase-query id="agendaPatients" path="/patients" data="{{patients}}"></firebase-query>
+        <firebase-query id="practitioners" path="users/practitioners" data="{{practitioners}}"></firebase-query>
+        <firebase-document id="docAppointments" path="/appointments/" data="{{newApp}}"></firebase-document>
+        <app-route
+                route="{{route}}"
+                pattern="/:appointment"
+                data="{{appData}}"
+                tail="{{appId}}"></app-route>
+        <iron-pages selected="[[appPage]]" attr-for-selected="name">
+            <div name="schedule">
+                <div class="center-button">
+                    <paper-button raised on-tap="openDialog" data-arg="addEventDialog" class="add-event-button">Add
+                        Appointment
+                    </paper-button>
+                    <paper-button raised on-tap="goToAppointment" class="add-event-button">Go to Appointment
+                    </paper-button>
+                </div>
+                <div class="center-calendar">
+                    <paper-material id="calendar"></paper-material>
+                </div>
+            </div>
+            <div name="appointment">
+                <appointment-page appointment="{{selectedAppointment}}"></appointment-page>
+            </div>
+        </iron-pages>
+        <paper-dialog id="addEventDialog"
+                      no-cancel-on-outside-click
+                      class="paper-date-picker-dialog"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <h2>Add Appointment</h2>
+            <paper-input id="title" required label="Appointment Title"></paper-input>
+            <paper-input name="appDatePicker" id="eventDate" label="Event Date" value="{{eventDate}}"
+                         on-tap="openDialog" required></paper-input>
+            <vaadin-combo-box items="[[practitioners]]" id="practitionerItem" label="Practitioner"
+                              item-value-path="$key" item-label-path="fullName">
+                <template>
+                    <paper-body two-line>
+                        <div>[[item.fullName]]</div>
+                        <div secondary>[[item.email]]</div>
+                    </paper-body>
+                </template>
+            </vaadin-combo-box>
+            <vaadin-combo-box items="[[patients]]" id="patientItem" label="Patient" item-value-path="$key"
+                              item-label-path="fullName">
+                <template>
+                    <paper-body two-line>
+                        <div>[[item.fullName]]</div>
+                        <div secondary>[[item.email]]</div>
+                    </paper-body>
+                </template>
+            </vaadin-combo-box>
+            <paper-input id="eventDescription" required placeholder="Description" type="text"></paper-input>
+            <paper-input id="startTimeInput" label="Start Time" required on-tap="openDialog" name="startTimeDialog"
+                         value="[[startTime]]"></paper-input>
+            <paper-input id="endTimeInput" label="End Time" required on-tap="openDialog" name="endTimeDialog"
+                         value="[[endTime]]"></paper-input>
+            <div class="buttons">
+                <paper-button dialog-dismiss>close</paper-button>
+                <paper-button on-tap="saveNewEvent">Save</paper-button>
+            </div>
+        </paper-dialog>
+        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="appDatePicker"
+                               date="{{eventDate}}"></app-datepicker-dialog>
+        <paper-dialog id="startTimeDialog" class="paper-time-picker-dialog"
+                      on-iron-overlay-closed="dismissDialog">
+            <paper-time-picker id="timePicker" hour="0-24" time="{{startTime}}"></paper-time-picker>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm>OK</paper-button>
+            </div>
+        </paper-dialog>
+        <paper-dialog id="endTimeDialog" class="paper-time-picker-dialog"
+                      on-iron-overlay-closed="dismissDialog">
+            <paper-time-picker id="timePicker" hour="0-24" time="{{endTime}}"></paper-time-picker>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm>OK</paper-button>
+            </div>
+        </paper-dialog>
+
+    </template>
+    <script>
+        Polymer({
+            is: 'schedule-page',
+            properties: {
+                appointments: {
+                    type: Array
+                },
+                appPage: {
+                    type: String,
+                    reflectToAttribute: true,
+                    observer: '_appChanged'
+                },
+                selectedAppointment: {
+                    type: Object,
+                    notify: true,
+                    value: {key: '-IJ89EJ98D'}
+                },
+                startTime: {
+                    type: String,
+                    value: "8:00 AM"
+                },
+                endTime: {
+                    type: String,
+                    value: "9:00 AM"
+                }
+            },
+
+            observers: [
+                '_appointmentsChange(appointments.splices)',
+                '_routePageChanged(appData.appointment)'
+            ],
+
+            _routePageChanged: function (appPage) {
+//                if (this.user) {
+                if (!appPage) {
+                    window.history.pushState({}, null, '/agenda/schedule');
+                }
+                this.appPage = appPage || 'schedule';
+//                }
+//                else {
+////                    window.history.replaceState({}, null, '/login');
+//                    this.page = 'login';
+//                }
+            },
+
+            _appChanged: function (appPage) {
+                //May need later
+                console.log('test')
+            },
+
+            _appointmentsChange(appointments) {
+                if (appointments) {
+                    $("#calendar").fullCalendar('removeEvents')
+                    $("#calendar").fullCalendar('addEventSource', this.appointments)
+                }
+            },
+
+            openDialog: function (e) {
+                if (e.target.getAttribute('data-arg'))
+                    this.$[e.target.getAttribute('data-arg')].open();
+                else
+                    this.$[e.target.getAttribute('name')].open();
+            },
+
+            openDate: function () {
+                this.$.datePicker.open();
+            },
+
+            saveNewEvent: function () {
+                if (this.validateEvent()) {
+                    var fixedDate = this.eventDate.replace(/\//g, '-');
+                    var startTime = moment(this.startTime, ["h:mm A"]).format("HH:mm");
+                    var endTime = moment(this.endTime, ["h:mm A"]).format("HH:mm");
+                    var newEvent = {
+                        title: this.$.title.value,
+                        start: fixedDate + "T" + startTime,
+                        end: fixedDate + "T" + endTime,
+                        startTime: startTime,
+                        endTime: endTime,
+                        eventDate: fixedDate,
+                        patient: this.$.patientItem.selectedItem,
+                        description: this.$.eventDescription.value,
+                        practitioner: this.$.practitoner.selectedItem,
+                        backgroundColor: '#FFEA00'
+                    }
+                    this.$.docAppointments.data = newEvent;
+                    this.$.docAppointments.save('/appointments/');
+                    this.$.addEventDialog.close();
+                }
+                else
+                    console.log('error')
+            },
+
+            validateEvent: function () {
+                if (!(this.$.title.validate() &&
+                    this.$.eventDate.validate() &&
+                    this.$.practitionerItem.validate() &&
+                    this.$.patientItem.validate() &&
+                    this.$.eventDescription.validate() &&
+                    this.$.startTimeInput.validate() &&
+                    this.$.endTimeInput.validate())) {
+                    return false;
+                }
+                var fixedDate = this.eventDate.replace(/\//g, '-');
+                var someTitle = this.$.title.value;
+                var startTime = moment(this.startTime, ["h:mm A"]).format("HH:mm");
+                var endTime = moment(this.endTime, ["h:mm A"]).format("HH:mm");
+                if (moment(this.startTime, ["h:mm A"]).isAfter(moment(this.endTime, ["h:mm A"]))) {
+                    return false
+                }
+
+                return true
+            },
+
+            ready: function () {
+                $('#calendar').fullCalendar({
+                    weekends: false,
+                    height: 650,
+                    width: 650,
+                    defaultView: 'agendaWeek',
+                    editable: true,
+                    events: this.appointments,
+                    eventClick: function (calEvent, jsEvent, view) {
+                    }
+                })
+            },
+            goToAppointment: function () {
+                window.history.pushState({}, null, '/agenda/appointment/' + this.selectedAppointment.key);
+                window.dispatchEvent(new CustomEvent('location-changed'));
+            }
+        });
+
+    </script>
+
+</dom-module>

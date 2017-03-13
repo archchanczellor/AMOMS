@@ -1,0 +1,84 @@
+<!--<link rel="import" href="../bower_components/paper-badge/paper-badge.html">-->
+<dom-module id="appointment-page">
+
+    <template>
+
+        <style include="shared-styles">
+            .horizontal-around {
+                @apply(--layout-horizontal);
+                @apply(--layout-around-justified);
+            }
+            .horizontal {
+                @apply(--layout-horizontal);
+            }
+            .horizontal-center {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            .canceled {
+                background-color: #F44336;
+                color: white
+            }
+            .in-progress {
+                background-color: #FFFF00;
+                color: black;
+            }
+            .completed {
+                background-color:#00E676;
+                color: black;
+            }
+            paper-material {
+                padding: 10px;
+                border-radius: 10px;
+                margin: 5px;
+                text-transform: uppercase;
+            }
+        </style>
+        <div class="horizontal-around">
+            <div class="horizontal">
+                <div class="horizontal-center">
+                Appointment Status: &nbsp
+                </div>
+                <paper-material id="statusPill" elevation="1">
+                    [[appointmentTest.status]]
+                </paper-material>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'appointment-page',
+            properties: {
+                appointmentTest: {
+                    type: Object,
+                    value: {status: 'canceled'}
+                }
+            },
+            observers: [
+                'changedStatus(appointmentTest.status)'
+            ],
+
+            changedStatus: function(status) {
+//                todo: fix this
+            },
+
+            ready: function() {
+                switch(this.appointmentTest.status) {
+                    case 'canceled':
+                        this.$.statusPill.classList.add('canceled');
+                        break;
+                    case 'no-progress':
+                        this.$.statusPill.classList.add('no-progress');
+                        break;
+                    case 'completed':
+                        this.$.statusPill.classList.add('completed');
+                        break;
+                    default:
+                        break;
+                }
+            }
+        })
+    </script>
+
+</dom-module>

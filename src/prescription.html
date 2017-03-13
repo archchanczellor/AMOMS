@@ -1,0 +1,126 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/bwt-datatable/bwt-datatable.html">
+<!--<link rel="import" href="../bower_components/paper-menu/paper-menu.html">-->
+<!--<link rel="import" href="../bower_components/paper-menu/paper-submenu.html">-->
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
+<link rel="import" href="../bower_components/gold-phone-input/gold-phone-input.html">
+<link rel="import" href="../bower_components/gold-zip-input/gold-zip-input.html">
+<link rel="import" href="../bower_components/app-datepicker/app-datepicker-dialog.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../extra-files/address-autocomplete/address-autocomplete.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="shared-styles.html">
+<script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-serialize-object/dist/jquery.serialize-object.min.js"></script>
+
+<dom-module id="prescription-page">
+
+    <template>
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+
+            .buttons {
+                background-color: #2196F3;
+                color: white;
+                left: 100px;
+            }
+
+            .prescription-submit {
+                padding: 25px;
+            }
+        </style>
+
+        <firebase-document
+                id="document"
+                path="/prescriptions/"
+                data="{{prescriptionData}}">
+        </firebase-document>
+
+        <div class="horizontal-around">
+            <div>
+                <div class="center">
+                    <paper-material class="prescription-submit" elevation="1">
+                        <form id="addPrescriptionForm">
+                            <h2>Drug Prescription</h2>
+                            <paper-input id="drugName" name="drugName" label="Drug Name" autofocus
+                                         required></paper-input>
+                            <paper-input id="drugAmount" name="drugAmount" label="Dosage" autofocus
+                                         required></paper-input>
+                            <paper-input id="drugDirections" name="drugDirections" label="Directions" autofocus
+                                         required></paper-input>
+                        </form>
+                    </paper-material>
+                    <div>
+                        <paper-button class="buttons" id="addPrescriptionButton" on-tap="addPrescription">Add
+                            Prescription
+                        </paper-button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <paper-toast id="prescriptionToast" text="{{toastMessage}}"></paper-toast>
+    </template>
+
+    <script>
+
+
+    </script>
+
+    <script>
+
+        Polymer({
+
+            is: 'prescription-page',
+
+            properties: {
+                prescription: {
+                    type: Object,
+                    value: null
+                }
+            },
+
+            addPrescription: function () {
+                var data = $("#addPrescriptionForm :input").serializeObject();
+                this.$.document.data = data;
+                this.$.document.save('/prescriptions/').then(function () {
+                    document.querySelector('prescription-page').toastMessage = "Prescription has been added!";
+                    document.querySelector('#prescriptionToast').open();
+                }, function () {
+                    document.querySelector('prescription-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#prescriptionToast').open();
+                });
+            }
+        })
+
+    </script>
+
+</dom-module>

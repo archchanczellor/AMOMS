@@ -88,7 +88,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <a name="login" href="/login" drawer-toggle>Login</a>
                     </div>
                     <div hidden$="[[!user]]" name="schedule">
-                        <a href="/schedule" drawer-toggle>Schedule</a>
+                        <a href="/agenda/schedule" drawer-toggle>Schedule</a>
                     </div>
                     <div hidden$="[[!user]]" name="patient">
                         <a href="/patient" drawer-toggle>Patient</a>
@@ -96,6 +96,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <div hidden$="[[!user]]" name="users">
                         <a href="/users" drawer-toggle>Admin</a>
                     </div>
+                    <div hidden$="[[!user]]" name="prescription">
+                        <a href="/prescription">Create a Prescription</a>
+                    </div>
+
                 </iron-selector>
             </app-drawer>
 
@@ -114,9 +118,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
                 <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="view404" role="main">
                     <login-page name="login"></login-page>
-                    <schedule-page hidden$="[[!user]]" name="schedule"></schedule-page>
-                    <patient-page hidden$="[[!user]]" name="patient" user="[[user]]" error-message="{{errorMessage}}"></patient-page>
+                    <schedule-page hidden$="[[!user]]" route="[[subroute]]" name="agenda"></schedule-page>
+                    <patient-page hidden$="[[!user]]" name="patient" user="[[user]]"
+                                  error-message="{{errorMessage}}"></patient-page>
                     <users-admin hidden$="[[!user]]" name="users"></users-admin>
+                    <prescription-page name="prescription"></prescription-page>
                     <my-view404 name="view404"></my-view404>
                 </iron-pages>
 
@@ -154,7 +160,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             _routePageChanged: function (page) {
 //                if (this.user) {
                 this.page = page || 'login';
-//                }
+                //                }
 //                else {
 ////                    window.history.replaceState({}, null, '/login');
 //                    this.page = 'login';
