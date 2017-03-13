@@ -17,6 +17,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
 <link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="logout.html">
@@ -67,7 +69,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 padding-left: 32px;
             }
 
-
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+                margin-top: 20px;
+            }
         </style>
         <app-location route="{{route}}"></app-location>
         <app-route
@@ -82,8 +88,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       storage-bucket="amoms-9ecf6.appspot.com"></firebase-app>
         <firebase-auth id="mainAuth" user="{{user}}" app-name="primary" provider="google"
                        on-error="handleError"></firebase-auth>
-        <firebase-query id="filterUsers" app-name="primary" path="/users/{{user.uid}}"
-                        data="{{filteredUser}}"></firebase-query>
+        <firebase-document id="filterUsers" app-name="primary" path="/users/{{user.uid}}"
+                           data="{{filteredUser}}"></firebase-document>
         <app-drawer-layout fullbleed force-narrow>
             <!-- Drawer content -->
             <app-drawer>
@@ -95,14 +101,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <div hidden$="[[!user]]" name="schedule">
                         <a href="/agenda/schedule" drawer-toggle>Schedule</a>
                     </div>
-                    <div hidden$="[[!_computePatientPage(Secretary, Administrator)]]" name="patient">
+                    <div hidden$="[[!_computeSecretaryView(filteredUser.role)]]" name="patient">
                         <a href="/patient" drawer-toggle>Patient</a>
                     </div>
-                    <div hidden$="[[!Administrator]]" name="users">
+                    <div hidden$="[[!_computeAdminView(filteredUser.role)]]" name="users">
                         <a href="/users" drawer-toggle>Admin</a>
                     </div>
                     <!--<div hidden$="[[!user]]" name="prescription">-->
-                        <!--<a href="/prescription">Create a Prescription</a>-->
+                    <!--<a href="/prescription">Create a Prescription</a>-->
                     <!--</div>-->
 
                 </iron-selector>
@@ -124,10 +130,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="view404" role="main">
                     <login-page name="login"></login-page>
                     <schedule-page hidden$="[[!user]]" route="[[subroute]]" name="agenda"></schedule-page>
-                    <patient-page hidden$="[[!_computePatientPage(Secretary, Administrator)]]" name="patient"
-                                  user="[[user]]"
-                                  error-message="{{errorMessage}}"></patient-page>
-                    <users-admin hidden$="[[!Administrator]]" name="users"></users-admin>
+                    <patient-page hidden$="[[!_computeSecretaryView(filteredUser.role)]]" name="patient"
+                                  user="[[user]]" admin="Administrator" secretary="Secretary"
+                                  practitioner="Practitioner" error-message="{{errorMessage}}"></patient-page>
+                    <users-admin hidden$="[[!_computeAdminView(filteredUser.role)]]" name="users"></users-admin>
                     <!--<prescription-page name="prescription"></prescription-page>-->
                     <my-view404 name="view404"></my-view404>
                 </iron-pages>
@@ -139,6 +145,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <h3>Hmm...</h3>
             <p>{{errorMessage}}</p>
             <paper-button dialog-dismiss>Close</paper-button>
+        </paper-dialog>
+
+        <paper-dialog modal id="viewAppDialog" no-cancel-on-outside-click
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <paper-item>[[appDetail.title]]</paper-item>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button on-tap="editApp">Edit</paper-button>
+                <paper-button hidden$="[[!_computePractitionerView(filteredUser.role)]]" on-tap="viewApp">View
+                </paper-button>
+            </div>
         </paper-dialog>
 
         <paper-toast id="mainToast" text="{{toastMessage}}"></paper-toast>
@@ -170,35 +188,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: Boolean,
                     value: null
                 },
-                toastMessage: String
+                toastMessage: String,
+                appDetail: Object
+            },
+
+            listeners: {
+                'viewApp': 'openAppDialog'
             },
 
             observers: [
-                '_routePageChanged(routeData.page)',
-                '_unSeen(filteredUser.splices)'
+                '_routePageChanged(routeData.page)'
             ],
 
-            _computePatientPage: function (Secretary, Administrator) {
-                if(Secretary || Administrator)
+            _computeSecretaryView: function (role) {
+                if (role == "Secretary" || role == "Administrator")
                     return true
                 else
                     return false
             },
-
-            _unSeen: function (user) {
-                if (user) {
-                    if (user.indexSplices) {
-                        if (user.indexSplices[0].object[3]) {
-                            var role = user.indexSplices[0].object[3];
-                            if (role.$val == "Administrator")
-                                this.Administrator = true;
-                            else if (role.$val == "Practitioner")
-                                this.Practitioner = true
-                            else
-                                this.Secretary = true
-                        }
-                    }
-                }
+            _computePractitionerView: function (role) {
+                if (role == "Practitioner" || role == "Administrator")
+                    return true
+                else
+                    return false
+            },
+            _computeAdminView: function(role) {
+                if (role == "Administrator")
+                    return true
+                else
+                    return false
             },
 
             _routePageChanged: function (page) {
@@ -209,19 +227,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 ////                    window.history.replaceState({}, null, '/login');
 //                    this.page = 'login';
 //                }
-            },
+            }
+            ,
 
             _pageChanged: function (page) {
                 // Load page import on demand. Show 404 page if fails
                 var resolvedPageUrl = this.resolveUrl(page + '.html');
                 this.importHref(resolvedPageUrl, null, this._showPage404, true);
-            },
+            }
+            ,
 
             _showPage404: function () {
                 this.page = 'view404';
             }
+            ,
 
-        });
+            openAppDialog: function (e) {
+                this.appDetail = e.detail.calEvent;
+                this.$.viewAppDialog.open();
+            }
+
+        })
+        ;
 
     </script>
 

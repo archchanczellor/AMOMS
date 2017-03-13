@@ -10,8 +10,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="shared-styles.html">
-<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
-<link rel="import" href="../bower_components/neon-animation/neon-animations.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
@@ -94,13 +92,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
 
         </style>
-
+        <firebase-auth id="agendaAuth" user="{{user}}" app-name="primary" provider="google"
+                       on-error="handleError"></firebase-auth>
+        <firebase-document id="findSignedInUserRole" app-name="primary" path="/users/[[user.uid]]"
+                           data="{{userData}}"></firebase-document>
         <firebase-query id="queryAppointments" app-name="primary" path="/appointments"
                         data="{{appointments}}"></firebase-query>
         <firebase-query id="agendaPatients" app-name="primary" path="/patients" data="{{patients}}"></firebase-query>
         <firebase-query id="practitioners" app-name="primary" path="/users" data="{{practitioners}}"></firebase-query>
         <firebase-document id="docAppointments" app-name="primary" path="/appointments/"
                            data="{{newApp}}"></firebase-document>
+
         <app-route
                 route="{{route}}"
                 pattern="/:appointment"
@@ -221,16 +223,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: String,
                     value: null
                 },
-                storePatient: Object
+                storePatient: Object,
+                userData: Object,
+                iter: {
+                    type: Number,
+                    value: 0
+                },
+                practitionerAppointments: {
+                    type: Array,
+                    value: []
+                }
             },
 
             listeners: {
-                'viewApp': 'goToAppointment'
+//                'viewApp': 'goToAppointment'
             },
 
             observers: [
-                '_appointmentsChange(appointments.splices)',
-                '_routePageChanged(appData.appointment)'
+                '_appointmentsChange(appointments.splices, userData.email, userData.role)',
+                '_routePageChanged(appData.appointment)',
             ],
 
             _routePageChanged: function (appPage) {
@@ -244,6 +255,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 ////                    window.history.replaceState({}, null, '/login');
 //                    this.page = 'login';
 //                }
+            },
+
+            _roleChanged: function (user) {
+                console.log(user)
             },
 
             _fixDate: function () {
@@ -264,10 +279,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 console.log('test')
             },
 
-            _appointmentsChange(appointments) {
-                if (appointments) {
+            _appointmentsChange(a, email, role) {
+                if (role == "Administrator" || role == "Secretary") {
                     $("#calendar").fullCalendar('removeEvents')
                     $("#calendar").fullCalendar('addEventSource', this.appointments)
+                }
+                else if (this.appointments[this.iter].practitioner.email == email) {
+                    this.push('practitionerAppointments', this.appointments[this.iter])
+                    $("#calendar").fullCalendar('removeEvents')
+                    $("#calendar").fullCalendar('addEventSource', this.practitionerAppointments)
+                    this.iter++
                 }
             },
 
