@@ -65,9 +65,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 max-height: 50px;
             }
 
-            .horizontal-layout {
+            .horizontal-center {
                 @apply(--layout-horizontal);
                 @apply(--layout-center);
+            }
+
+            .horizontal-layout {
+                @apply(--layout-horizontal);
             }
 
             .class[hidden] {
@@ -78,6 +82,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 @apply(--layout-horizontal);
                 @apply(--layout-end-justified);
                 margin-top: 20px;
+            }
+
+            .left-form {
+                padding-right: 10px;
+                width: 50%;
+            }
+
+            .right-form {
+                width: 50%;
             }
 
         </style>
@@ -119,35 +132,44 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
             <h2>Add Appointment</h2>
-            <paper-input id="title" required label="Appointment Title"></paper-input>
-            <paper-input name="appDatePicker" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})" id="eventDate" label="Event Date"
-                         value="{{appDate}}" on-tap="openDialog" placeholder="YYYY-MM-DD" required auto-validate></paper-input>
-            <vaadin-combo-box items="[[onlyPractitioners]]" id="practitionerItem" label="Practitioner"
-                              item-value-path="$key" item-label-path="lastName">
-                <template>
-                    <paper-item>
-                        <div>[[item.firstName]] [[item.lastName]]</div>
-                    </paper-item>
-                </template>
-            </vaadin-combo-box>
-            <vaadin-combo-box items="[[patients]]" id="patientItem" label="Patient" item-value-path="$key"
-                              item-label-path="firstName">
-                <template>
-                    <paper-body two-line>
-                        <div>[[item.fullName]]</div>
-                        <div secondary>[[item.email]]</div>
-                    </paper-body>
-                </template>
-            </vaadin-combo-box>
-            <paper-input id="eventDescription" required placeholder="Description" type="text"></paper-input>
-            <paper-input id="startTimeInput" label="Start Time" required on-tap="openDialog" name="startTimeDialog"
-                         value="[[startTime]]"></paper-input>
-            <paper-input id="endTimeInput" label="End Time" required on-tap="openDialog" name="endTimeDialog"
-                         value="[[endTime]]"></paper-input>
-            <div class="buttons">
-                <paper-button dialog-dismiss>close</paper-button>
-                <paper-button on-tap="saveNewEvent">Save</paper-button>
+            <div class="horizontal-layout">
+                <div class="left-form">
+                    <paper-input id="title" required label="Appointment Title"></paper-input>
+                    <vaadin-combo-box items="[[onlyPractitioners]]" id="practitionerItem" label="Practitioner"
+                                      item-value-path="$key" item-label-path="lastName">
+                        <template>
+                            <paper-item>
+                                <div>[[item.firstName]] [[item.lastName]]</div>
+                            </paper-item>
+                        </template>
+                    </vaadin-combo-box>
+                    <vaadin-combo-box items="[[patients]]" id="patientItem" label="Patient" item-value-path="$key"
+                                      item-label-path="firstName">
+                        <template>
+                            <paper-body two-line>
+                                <div>[[item.fullName]]</div>
+                                <div secondary>[[item.email]]</div>
+                            </paper-body>
+                        </template>
+                    </vaadin-combo-box>
+                    <paper-input id="eventDescription" required placeholder="Description" type="text"></paper-input>
+                </div>
+                <div class="right-form">
+                    <paper-input name="appDatePicker" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})" id="eventDate"
+                                 label="Event Date" value="{{appDate}}" on-tap="openDialog" placeholder="YYYY-MM-DD"
+                                 required auto-validate></paper-input>
+                    <paper-input id="startTimeInput" label="Start Time" required on-tap="openDialog"
+                                 name="startTimeDialog"
+                                 value="[[startTime]]"></paper-input>
+                    <paper-input id="endTimeInput" label="End Time" required on-tap="openDialog" name="endTimeDialog"
+                                 value="[[endTime]]"></paper-input>
+                    <div class="buttons">
+                        <paper-button dialog-dismiss>close</paper-button>
+                        <paper-button on-tap="saveNewEvent">Save</paper-button>
+                    </div>
+                </div>
             </div>
+
         </paper-dialog>
         <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="appDatePicker"
                                date="{{eventDate}}"></app-datepicker-dialog>
@@ -198,7 +220,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 endTime: {
                     type: String,
                     value: null
-                }
+                },
+                storePatient: Object
             },
 
             listeners: {
@@ -223,7 +246,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 //                }
             },
 
-            _fixDate: function() {
+            _fixDate: function () {
                 this.appDate = this.eventDate.replace(/\//g, '-');
             },
 
@@ -262,6 +285,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             saveNewEvent: function () {
                 if (this.validateEvent()) {
                     var fixedDate = this.appDate;
+                    var patient = this.grabPatient();
+                    var practitioner = this.grabPractitioner();
                     var startTime = moment(this.startTime, ["h:mm A"]).format("HH:mm");
                     var endTime = moment(this.endTime, ["h:mm A"]).format("HH:mm");
                     var newEvent = {
@@ -271,9 +296,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         startTime: startTime,
                         endTime: endTime,
                         eventDate: fixedDate,
-                        patient: this.$.patientItem.selectedItem,
+                        patient: patient,
                         description: this.$.eventDescription.value,
-                        practitioner: this.$.practitoner.selectedItem,
+                        practitioner: practitioner,
                         backgroundColor: '#FFEA00'
                     }
                     this.$.docAppointments.data = newEvent;
@@ -282,6 +307,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 }
                 else
                     console.log('error')
+            },
+
+            grabPatient: function () {
+                this.storePatient = {};
+                var temp = this.$.patientItem.selectedItem;
+                for (var k in temp) {
+                    if (temp.hasOwnProperty(k)) {
+                        if (k != '$key')
+                            this.storePatient[k] = temp[k]
+                    }
+                }
+                console.log(this.storePatient)
+                return this.storePatient;
+//                patient.birthdate = temp.birthdate;
+//                patient.city;
+//                patient.email
+//                patient.firstName
+//                patient.lastName
+//                patient.
+            },
+
+            grabPractitioner: function () {
+                this.storePatient = {};
+                var temp = this.$.practitionerItem.selectedItem;
+                for (var k in temp) {
+                    if (temp.hasOwnProperty(k)) {
+                        if (k != '$key')
+                            this.storePatient[k] = temp[k]
+                    }
+                }
+                console.log(this.storePatient)
+                return this.storePatient;
             },
 
             validateEvent: function () {
@@ -314,7 +371,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     editable: false,
                     events: this.appointments,
                     eventClick: function (calEvent, jsEvent, view) {
-                        document.querySelector('schedule-page').fire('viewApp', {calEvent: calEvent, jsEvent: jsEvent, view: view})
+                        document.querySelector('schedule-page').fire('viewApp', {
+                            calEvent: calEvent,
+                            jsEvent: jsEvent,
+                            view: view
+                        })
                     }
                 })
             },

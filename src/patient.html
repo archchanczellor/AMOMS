@@ -299,7 +299,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             </tr>
                             </thead>
                             <tbody>
-                            <template is="dom-repeat" items="{{patientNotes}}">
+                            <template is="dom-repeat" items="{{storePatientNotes}}">
                                 <tr>
                                     <td>[[item.date]]</td>
                                     <td>[[item.creator]]</td>
@@ -469,6 +469,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: String,
                     notify: true
                 },
+                patientData:{
+                    type: Array,
+                    value: []
+                },
+                storePatientNotes: {
+                    type: Array,
+                    value: []
+                },
                 toastMessage: String,
                 tempIndex: Number,
                 uid: String,
@@ -487,6 +495,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             listeners: {
                 'iron-form-submit': 'addPatient',
                 'selected-items-changed': '_updatePatient'
+            },
+            observers: [
+                '_checkForChange(patientNotes.splices)'
+            ],
+
+            _checkForChange: function(notes) {
+                if(notes)
+                    this.storePatientNotes = notes.indexSplices[0].object;
             },
 
             _concat: function (fN, lN) {
@@ -599,6 +615,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 grid.addEventListener('selected-items-changed', function () {
                     this.selection.selected(function (index) {
                         var dataPage = document.querySelector('patient-page');
+                        dataPage.storePatientNotes = [];
                         dataPage.patient = dataPage.patientData[index];
                         dataPage.uid = dataPage.patient.$key;
                         dataPage.selectedNote = null;
