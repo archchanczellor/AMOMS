@@ -187,18 +187,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <firebase-query
                 id="queryPatients"
                 path="/patients"
+                app-name="primary"
                 data="{{dataQuery}}"></firebase-query>
         <firebase-query
                 id="queryNotes"
                 path="/notes/[[uid]]"
+                app-name="primary"
                 data="{{patientNotes}}"></firebase-query>
         <firebase-document
                 id="document"
                 path="/patients/"
+                app-name="primary"
                 data="{{patientData}}"></firebase-document>
         <firebase-document
                 id="documentNotes"
-                path="/notes/[[uiid]]"
+                path="/notes/[[uid]]"
+                app-name="primary"
                 data="{{patientDocNotes}}"></firebase-document>
         <!--<div class="vertical-center">-->
         <poly-filter
@@ -221,7 +225,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <paper-button class="add-patient-button" raised on-tap="openDialog">Add Patient</paper-button>
                     </div>
                 </div>
-                <vaadin-grid visible-rows="5" id="patientGrid" selection="{{patient}}">
+                <vaadin-grid visible-rows="5" id="patientGrid">
                     <table>
                         <colgroup>
                             <col>

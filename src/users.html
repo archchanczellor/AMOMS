@@ -17,6 +17,9 @@
 <link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../bower_components/paper-searchbox/paper-searchbox.html">
+<link rel="import" href="../bower_components/poly-filter/poly-filter.html">
 <link rel="import" href="shared-styles.html">
 <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
 <script src="../bower_components/jquery-serialize-object/dist/jquery.serialize-object.min.js"></script>
@@ -27,11 +30,6 @@
             :host {
                 display: block;
                 height: 100vh;
-            }
-
-            paper-material {
-                height: 150px;
-                width: 200px;
             }
 
             .center-page {
@@ -45,10 +43,12 @@
                 @apply(--layout-horizontal);
                 @apply(--layout-center-center);
             }
+
             paper-button {
                 color: white;
                 background-color: blue;
             }
+
             .center {
                 @apply(--layout-vertical);
                 @apply(--layout-center);
@@ -61,15 +61,15 @@
 
             .user-info {
                 background: white;
-                padding: 25px 35px;
                 border-radius: 4px;
                 min-width: 60vw;
-                height: auto;
+                width: 90vw;
             }
 
             .user-content {
-                @apply(--layout-horizontal);
-                max-height: 35vh;
+                @apply(--layout-vertical);
+                height: 35vh;
+                padding: 15px;
                 -webkit-transition: max-height .25s;
                 -moz-transition: max-height .25s;
                 -ms-transition: max-height .25s;
@@ -143,18 +143,10 @@
             .justify-right {
                 @apply(--layout-horizontal);
                 @apply(--layout-end-justified);
-                padding: 20px 0;
             }
 
             .user-title {
                 padding: 0 20px;
-            }
-
-            #addUserButton {
-                background-color: #2196F3;
-                color: white;
-                max-height: 50px;
-                margin-top: 12px;
             }
 
             .horizontal-justified {
@@ -166,64 +158,105 @@
                 background-color: #F44336;
             }
 
+            .add-user-button {
+                background-color: #2196F3;
+                color: white;
+                max-height: 50px;
+            }
+
             .edit-user-button {
                 color: white;
                 background-color: #FF5722;
+                max-height: 50px;
             }
 
             .class[hidden] {
                 display: none;
             }
+
+            .user-heading {
+                padding: 10px 25px 0 25px;
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+            }
+
+            search-box {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
         </style>
 
+        <firebase-app api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI"
+                      name="secondary"
+                      auth-domain="amoms-9ecf6.firebaseapp.com"
+                      database-url="https://amoms-9ecf6.firebaseio.com"
+                      storage-bucket="amoms-9ecf6.appspot.com"></firebase-app>
+        <firebase-auth id="createUser" app-name="secondary" user="{{tempUser}}" provider="google"
+                       on-error="showError"></firebase-auth>
         <firebase-query
                 id="queryUsers"
+                app-name="primary"
                 path="/users"
                 data="{{dataQuery}}"></firebase-query>
         <firebase-document
-                id="document"
+                id="saveUserData"
+                app-name="primary"
                 path="/users/"
                 data="{{userData}}"></firebase-document>
-<!--
-        <firebase-app auth-domain="amoms-9ecf6.firebaseapp.com"
-        database-url="https://amoms-9ecf6.firebaseio.com"
-        api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI">
-        </firebase-app>
-
-        <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError">
-        </firebase-auth>
--->
+        <firebase-auth id="auth" app-name="primary" user="{{user}}" provider="google"
+                       on-error="showError"></firebase-auth>
+        <poly-filter
+                array-to-filter="[[dataQuery]]"
+                filter="[[userSearch]]"
+                filtered-array="{{searchedUsers}}">
+        </poly-filter>
         <div class="horizontal-around">
-            <div>
-                <div class="center">
-                    <paper-material class="user-info" elevation="1">
-                        <div class="horizontal-justified horizontal-layout">
-                            <h1>User Info</h1>
-                            <div hidden$="[[!user]]" class="justify-right">
-                                <paper-button raised class="edit-user-button" on-tap="_editUser">Edit
+            <div class="center">
+                <div class="center-page">
+                    <paper-material class="user-info" elevation="5">
+                        <div class="user-heading">
+                            <h1>Users</h1>
+                            <div class="search-box">
+                                <paper-searchbox raise-forced no-hover
+                                                 value="{{userSearch::input}}"></paper-searchbox>
+                            </div>
+                            <div class="justify-right">
+                                <paper-button raised class="edit-user-button" hidden$="[[!someUser]]"
+                                              on-tap="_openEditUserDialog">Edit User
                                 </paper-button>
-                                <div class="center-page">
-                                    <paper-material elevation="5">
-                                        <div class="center-item">
-                                            <paper-button raised on-tap="openDialog">Add User</paper-button>
-                                        </div>
-                                    </paper-material>
-                                </div>
-                                <!--<paper-button raised class="delete-user-button" on-tap="_deletePatient">Delete</paper-button>-->
+                                <paper-button raised class="add-user-button" on-tap="_openAddUserDialog">Add User</paper-button>
                             </div>
                         </div>
-                        <template is="dom-repeat" items="{{userData}}">
-                          <div class="user-content">
-                            <div style="padding-right: 20px;">
-                                <div>Name: [[user.firstName]] [[user.lastName]]</div>
-                                <div>Email: [[user.email]]</div>
-                                <div>password: [[user.password]]</div>
-                                <div>role: [[user.role]]</div>
-                            </div>
-                          </div>
-                        </template>
+                        <vaadin-grid visible-rows="5" id="usersGrid" selection="{{searchedUsers}}">
+                            <table>
+                                <colgroup>
+                                    <col>
+                                    <col>
+                                    <col>
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <template is="dom-repeat" items="[[searchedUsers]]">
+                                    <tr>
+                                        <td>[[item.firstName]] [[item.lastName]]</td>
+                                        <td>[[item.email]]</td>
+                                        <td>[[item.role]]</td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
+                        </vaadin-grid>
                     </paper-material>
                 </div>
+            </div>
+        </div>
+
 
         <div class="spacer"></div>
         <paper-dialog id="addUserDialog"
@@ -234,25 +267,28 @@
             <form is="iron-form" id="addUserForm">
                 <h2>Add User</h2>
                 <div class="horizontal-layout">
-                    <div class="vertical-layout form-left">
+                    <div class="vertical-layout">
                         <div class="horizontalLayout">
-                            <paper-input id="firstName" name="firstName" label="First Name" autofocus
+                            <paper-input id="userFirstName" name="firstName" label="First Name" autofocus
                                          required></paper-input>
-                            <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
+                            <paper-input id="userLastName" name="lastName" label="Last Name" required></paper-input>
                         </div>
-                        <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
-                        <paper-dropdown-menu label="role" id="Role" name="Role" required>
+                        <gold-email-input name="email" id="userEmail" label="Email" auto-validate
+                                          required></gold-email-input>
+                        <paper-input type="password" id="userPassword" name="password" label="Password"
+                                     required></paper-input>
+                        <paper-dropdown-menu label="role" id="userRole" name="Role" required>
                             <paper-menu class="dropdown-content">
                                 <paper-item name="administrator" value="administrator">Administrator</paper-item>
                                 <paper-item name="secretary" value="secretary">Secretary</paper-item>
                                 <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
-                            <paper-menu>
-                        <paper-dropdown-menu>
+                            </paper-menu>
+                        </paper-dropdown-menu>
                     </div>
                 </div>
                 <div class="buttons">
                     <paper-button dialog-dismiss>Close</paper-button>
-                    <paper-button onclick="_submit()">Submit</paper-button>
+                    <paper-button on-tap="addUser">Submit</paper-button>
                 </div>
             </form>
         </paper-dialog>
@@ -265,37 +301,32 @@
             <form is="iron-form" id="editUserForm">
                 <h2>Edit [[user.firstName]] [[user.lastName]]</h2>
                 <div class="horizontal-layout">
-                    <div class="vertical-layout form-left">
+                    <div class="vertical-layout">
                         <div class="horizontalLayout">
                             <paper-input id="editFirst" name="firstName" label="First Name" autofocus
                                          required value="{{userEdit.firstName::input}}"></paper-input>
                             <paper-input id="editLast" name="lastName" label="Last Name"
-                              value="{{userEdit.lastName::input}}" required></paper-input>
+                                         value="{{userEdit.lastName::input}}" required></paper-input>
                         </div>
                         <gold-email-input name="email" label="Email" validate
-                          value="{{userEdit.email::input}}" required></gold-email-input>
+                                          value="{{userEdit.email::input}}" required></gold-email-input>
                         <paper-dropdown-menu label="role" id="editRole" name="Role" required>
                             <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.role)}}">
                                 <paper-item name="administrator" value="administrator">Administrator</paper-item>
                                 <paper-item name="secretary" value="secretary">Secretary</paper-item>
                                 <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
-                            <paper-menu>
-                        <paper-dropdown-menu>
+                            </paper-menu>
+                        </paper-dropdown-menu>
                     </div>
                 </div>
                 <div class="buttons">
                     <paper-button dialog-dismiss>Close</paper-button>
-                    <paper-button onclick="_saveUser()">Submit</paper-button>
+                    <paper-button on-tap="_saveUser">Submit</paper-button>
                 </div>
             </form>
         </paper-dialog>
         <paper-toast id="userToast" text="{{toastMessage}}"></paper-toast>
     </template>
-    <script>
-      function _submit(event) {
-        $('#addUserForm').submit()
-      }
-    </script>
     <script>
 
         Polymer({
@@ -303,91 +334,83 @@
             is: 'users-admin',
 
             properties: {
-              userEmail: Object,
-              user: {
-                type: Object,
-                value: null
-              },
-              userEdit: {
-                type: Object,
-                value: null
-              },
-              selected: String,
-              errorMessage: {
-                type: String,
-                notify: true
-              },
-              toastMessage: String,
-              dataQuery: {
-                type: Object,
-                observer: '_updateQuery'
-              },
-              tempIndex: Number,
-              uid: String
-            },
-
-            listeners: {
-                'iron-form-submit': 'addUser'
+                someUser: {
+                    type: Object,
+                    value: null
+                },
+                userEdit: {
+                    type: Object,
+                    value: null
+                },
+                toastMessage: String,
+                key: String
             },
 
             addUser: function () {
-              var data = $("#addUserForm :input").serializeObject();
-              data.role = this.$.role.value
-              data.email = this.$.email.value
-              data.password = this.$.password.value
-              this.$.document.data = data;
-              this.$.auth.createUserWithEmailAndPassword(data.email,data.password)
-            //  .then(function(toastMessage).catch(function())
-              this.$.document.save('/users/').then(function () {
-                  document.querySelector('#addUserDialog').close();
-                  document.querySelector('users-admin').toastMessage = "User has been added!";
-                  document.querySelector('#userToast').open();
-              }, function () {
-                  document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                  document.querySelector('#userToast').open();
-              })
+                this.$.createUser.createUserWithEmailAndPassword(this.$.userEmail.value, this.$.userPassword.value).then(function (firebaseUser) {
+                    //success
+                    document.querySelector('users-admin').key = firebaseUser.uid;
+                    document.querySelector('users-admin').saveUserData();
+                }, function () {
+                    //failure
+                    document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#userToast').open();
+                })
             },
-            saveUser: function () {
-              var key = this.userEdit.$key;
-              var tempData = $("#editUserForm :input").serializeObject();
-              tempData.gender = this.$.editRole.value;
-              this.$.document.data = tempData;
-              this.$.document.save('/users/', key).then(function () {
-                  document.querySelector('#editUserDialog').close();
-                  document.querySelector('users-admin').toastMessage = "User has been updated!";
-                  document.querySelector('#userToast').open();
-                  document.querySelector('users-admin').dirtyCheck();
-              }, function () {
-                  document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                  document.querySelector('#userToast').open();
-              })
+            saveUserData: function () {
+                this.$.saveUserData.data = {
+                    firstName: this.$.userFirstName.value,
+                    lastName: this.$.userLastName.value,
+                    email: this.$.userEmail.value,
+                    role: this.$.userRole.value
+                }
+                this.$.saveUserData.save('/users', this.key).then(function () {
+                    document.querySelector('#addUserDialog').close();
+                    document.querySelector('users-admin').toastMessage = "User has been added!";
+                }, function (e) {
+                    document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#userToast').open();
+                })
+
             },
-            _editUser: function () {
-                this.userEdit = this.patient;
-                this.$.editUserDialog.open();
+            _saveUser: function () {
+                var key = this.userEdit.$key;
+                var tempData = $("#editUserForm :input").serializeObject();
+                tempData.role = this.$.editRole.value;
+                this.$.saveUserData.data = tempData;
+                this.$.saveUserData.save('/users/', key).then(function () {
+                    document.querySelector('#editUserDialog').close();
+                    document.querySelector('users-admin').toastMessage = "User has been updated!";
+                    document.querySelector('#userToast').open();
+                    document.querySelector('users-admin').userEdit = null;
+                }, function () {
+                    document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#userToast').open();
+                })
             },
             _computeSelected: function (role) {
-                if (role == 'administrator')
+                if (role == 'Administrator')
                     return 0;
-                else if (role == 'secretary')
+                else if (role == 'Secretary')
                     return 1
                 else
                     return 2
             },
-            _updateQuery: function () {
-//                this.$.patientList._render();
-            },
-            openDialog: function () {
+            _openAddUserDialog: function () {
                 this.$.addUserDialog.open();
             },
-            dirtyCheck: function () {
-                this.async(function () {
-                    this.user = null;
-                    this.userEdit = null;
-                    var temp = this.dataQuery;
-                    this.set('dataQuery', []);
-                    this.set('dataQuery', temp);
-                }, 500)
+            _openEditUserDialog: function () {
+                this.userEdit = this.someUser;
+                this.$.editUserDialog.open();
+            },
+            ready: function () {
+                var userGrid = document.querySelector('#usersGrid');
+                userGrid.addEventListener('selected-items-changed', function () {
+                    this.selection.selected(function (index) {
+                        var dataPage = document.querySelector('users-admin');
+                        dataPage.someUser = dataPage.dataQuery[index];
+                    });
+                }.bind(userGrid));
             }
         });
     </script>

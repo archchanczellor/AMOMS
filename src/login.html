@@ -63,7 +63,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </style>
 
         <div hidden$="[[user]]">
-            <firebase-auth id="auth" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
+            <firebase-auth id="auth" app-name="primary" user="{{user}}" provider="google"
+                           on-error="showError"></firebase-auth>
             <div class="Aligner">
                 <paper-card heading="Login">
                     <div class="card-content">
