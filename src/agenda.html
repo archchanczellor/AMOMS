@@ -15,6 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/poly-filter/poly-filter.html">
 <link rel="import" href="../bower_components/paper-time-picker/paper-time-picker.html">
 <link rel="stylesheet" href="../bower_components/fullcalendar/dist/fullcalendar.min.css">
 <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
@@ -81,22 +82,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         </style>
 
-        <firebase-query id="queryAppointments" path="/appointments" data="{{appointments}}"></firebase-query>
-        <firebase-query id="agendaPatients" path="/patients" data="{{patients}}"></firebase-query>
-        <firebase-query id="practitioners" path="users/practitioners" data="{{practitioners}}"></firebase-query>
-        <firebase-document id="docAppointments" path="/appointments/" data="{{newApp}}"></firebase-document>
+        <firebase-query id="queryAppointments" app-name="primary" path="/appointments"
+                        data="{{appointments}}"></firebase-query>
+        <firebase-query id="agendaPatients" app-name="primary" path="/patients" data="{{patients}}"></firebase-query>
+        <firebase-query id="practitioners" app-name="primary" path="/users" data="{{practitioners}}"></firebase-query>
+        <firebase-document id="docAppointments" app-name="primary" path="/appointments/"
+                           data="{{newApp}}"></firebase-document>
         <app-route
                 route="{{route}}"
                 pattern="/:appointment"
                 data="{{appData}}"
                 tail="{{appId}}"></app-route>
+        <poly-filter
+                array-to-filter="[[practitioners]]"
+                filter="practitioner"
+                filtered-array="{{onlyPractitioners}}">
+        </poly-filter>
         <iron-pages selected="[[appPage]]" attr-for-selected="name">
             <div name="schedule">
                 <div class="center-button">
                     <paper-button raised on-tap="openDialog" data-arg="addEventDialog" class="add-event-button">Add
                         Appointment
-                    </paper-button>
-                    <paper-button raised on-tap="goToAppointment" class="add-event-button">Go to Appointment
                     </paper-button>
                 </div>
                 <div class="center-calendar">
@@ -114,19 +120,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       exit-animation="fade-out-animation">
             <h2>Add Appointment</h2>
             <paper-input id="title" required label="Appointment Title"></paper-input>
-            <paper-input name="appDatePicker" id="eventDate" label="Event Date" value="{{eventDate}}"
-                         on-tap="openDialog" required></paper-input>
-            <vaadin-combo-box items="[[practitioners]]" id="practitionerItem" label="Practitioner"
-                              item-value-path="$key" item-label-path="fullName">
+            <paper-input name="appDatePicker" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})" id="eventDate" label="Event Date"
+                         value="{{appDate}}" on-tap="openDialog" placeholder="YYYY-MM-DD" required auto-validate></paper-input>
+            <vaadin-combo-box items="[[onlyPractitioners]]" id="practitionerItem" label="Practitioner"
+                              item-value-path="$key" item-label-path="lastName">
                 <template>
-                    <paper-body two-line>
-                        <div>[[item.fullName]]</div>
-                        <div secondary>[[item.email]]</div>
-                    </paper-body>
+                    <paper-item>
+                        <div>[[item.firstName]] [[item.lastName]]</div>
+                    </paper-item>
                 </template>
             </vaadin-combo-box>
             <vaadin-combo-box items="[[patients]]" id="patientItem" label="Patient" item-value-path="$key"
-                              item-label-path="fullName">
+                              item-label-path="firstName">
                 <template>
                     <paper-body two-line>
                         <div>[[item.fullName]]</div>
@@ -178,17 +183,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 },
                 selectedAppointment: {
                     type: Object,
-                    notify: true,
-                    value: {key: '-IJ89EJ98D'}
+                    notify: true
                 },
                 startTime: {
                     type: String,
-                    value: "8:00 AM"
+                    value: null,
+                    observer: 'updateEndTime'
                 },
+                eventDate: {
+                    type: String,
+                    observer: '_fixDate'
+                },
+                appDate: String,
                 endTime: {
                     type: String,
-                    value: "9:00 AM"
+                    value: null
                 }
+            },
+
+            listeners: {
+                'viewApp': 'goToAppointment'
             },
 
             observers: [
@@ -207,6 +221,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 ////                    window.history.replaceState({}, null, '/login');
 //                    this.page = 'login';
 //                }
+            },
+
+            _fixDate: function() {
+                this.appDate = this.eventDate.replace(/\//g, '-');
+            },
+
+            updateEndTime: function () {
+                if (this.startTime) {
+                    var splitMeridian = this.startTime.split(" ")
+                    var splitColon = splitMeridian[0].split(":")
+                    var convTime = parseInt(splitColon[0]) + 1;
+                    this.endTime = convTime + ":" + splitColon[1] + " " + splitMeridian[1];
+                }
             },
 
             _appChanged: function (appPage) {
@@ -234,7 +261,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             saveNewEvent: function () {
                 if (this.validateEvent()) {
-                    var fixedDate = this.eventDate.replace(/\//g, '-');
+                    var fixedDate = this.appDate;
                     var startTime = moment(this.startTime, ["h:mm A"]).format("HH:mm");
                     var endTime = moment(this.endTime, ["h:mm A"]).format("HH:mm");
                     var newEvent = {
@@ -284,13 +311,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     height: 650,
                     width: 650,
                     defaultView: 'agendaWeek',
-                    editable: true,
+                    editable: false,
                     events: this.appointments,
                     eventClick: function (calEvent, jsEvent, view) {
+                        document.querySelector('schedule-page').fire('viewApp', {calEvent: calEvent, jsEvent: jsEvent, view: view})
                     }
                 })
             },
-            goToAppointment: function () {
+            goToAppointment: function (event) {
+                console.log(event.detail.calEvent)
+                console.log(event.detail.jsEvent)
+                console.log(event.detail.view)
                 window.history.pushState({}, null, '/agenda/appointment/' + this.selectedAppointment.key);
                 window.dispatchEvent(new CustomEvent('location-changed'));
             }

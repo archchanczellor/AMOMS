@@ -73,7 +73,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             <input name="email" value="[[email]]" hidden>
                             <input name="password" value="[[password]]" hidden>
                             <div class="horizontal">
-                                <paper-button raised class="submit" type="submit" on-tap="signInWithEmailAndPassword">
+                                <paper-button raised class="submit" type="submit" on-tap="signIn">
                                     Login
                                 </paper-button>
                                 <!--<paper-button raised class="submit" on-tap="signUpWithEmailAndPassword">Sign Up</paper-button>-->
@@ -104,18 +104,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             properties: {
                 errorMessage: String
             },
-            signInWithEmailAndPassword: function () {
+            signIn: function () {
                 this.$.auth.signInWithEmailAndPassword(this.email, this.password)
-                    .then(function (response) {
-                        this.$$('login-credentials').fire('clearCred');
-                        this.email = null;
-                        this.password = null;
-                        window.history.pushState({}, null, '/schedule');
+                    .then(function () {
+                        document.querySelector('login-credentials').fire('clearCred');
+                        document.querySelector('login-page').email = null;
+                        document.querySelector('login-page').password = null;
+                        window.history.pushState({}, null, '/agenda');
                         window.dispatchEvent(new CustomEvent('location-changed'));
-                    })
-                    .catch(function (error) {
-                        this.errorMessage = "Something went horribly wrong. Please try again."
-                        this.fire('openError');
+                    }, function (e) {
+                        document.querySelector('my-app').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                        document.querySelector('#mainToast').open();
                     });
             },
             _logout: function () {

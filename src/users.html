@@ -16,7 +16,6 @@
 <link rel="import" href="../bower_components/paper-menu/paper-menu.html">
 <link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../bower_components/paper-searchbox/paper-searchbox.html">
 <link rel="import" href="../bower_components/poly-filter/poly-filter.html">
@@ -203,7 +202,7 @@
                 app-name="primary"
                 path="/users/"
                 data="{{userData}}"></firebase-document>
-        <firebase-auth id="auth" app-name="primary" user="{{user}}" provider="google"
+        <firebase-auth id="primaryAuth" app-name="primary" user="{{user}}" provider="google"
                        on-error="showError"></firebase-auth>
         <poly-filter
                 array-to-filter="[[dataQuery]]"
@@ -227,7 +226,7 @@
                                 <paper-button raised class="add-user-button" on-tap="_openAddUserDialog">Add User</paper-button>
                             </div>
                         </div>
-                        <vaadin-grid visible-rows="5" id="usersGrid" selection="{{searchedUsers}}">
+                        <vaadin-grid visible-rows="5" id="usersGrid">
                             <table>
                                 <colgroup>
                                     <col>
@@ -242,7 +241,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <template is="dom-repeat" items="[[searchedUsers]]">
+                                <template is="dom-repeat" items="{{searchedUsers}}">
                                     <tr>
                                         <td>[[item.firstName]] [[item.lastName]]</td>
                                         <td>[[item.email]]</td>
