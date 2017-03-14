@@ -41,6 +41,15 @@
                 </div>
                 <paper-material id="statusPill" elevation="1">
                     [[appointmentTest.status]]
+                    <paper-dropdown-menu label="Appointment Status" id="editStatus" name="Status" required>
+                        <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.status)}}">
+                            <paper-item name="upcoming" value="upcoming">Upcoming</paper-item>
+                            <paper-item name="cancelled" value="cancelled">Cancelled</paper-item>
+                            <paper-item name="in-progress" value="in-progress">In-Progress</paper-item>
+                            <paper-item name="complete" value="complete">Complete</paper-item>
+                            <paper-item name="no-show" value="no-show">No-show</paper-item>
+                        </paper-menu>
+                    </paper-dropdown-menu>
                 </paper-material>
             </div>
         </div>
@@ -52,8 +61,26 @@
             properties: {
                 appointmentTest: {
                     type: Object,
-                    value: {status: 'canceled'}
+                    value: {status: 'upcoming'}
                 }
+                userEdit: {
+                    type: Object,
+                    value: null
+                },
+                toastMessage: String,
+                key: String
+            },
+            _computeSelected: function (status) {
+                if (status == 'upcoming')
+                    return 0;
+                else if (status == 'cancelled')
+                    return 1
+                else if (status == 'in-progress')
+                    return 2
+                else if (status == 'complete')
+                    return 3
+                else
+                    return 4
             },
             observers: [
                 'changedStatus(appointmentTest.status)'
