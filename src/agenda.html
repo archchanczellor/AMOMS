@@ -91,6 +91,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 width: 50%;
             }
 
+            .add-event-dialog {
+                min-width: 500px;
+            }
         </style>
         <firebase-auth id="agendaAuth" user="{{user}}" app-name="primary" provider="google"
                        on-error="handleError"></firebase-auth>
@@ -113,6 +116,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 filter="practitioner"
                 filtered-array="{{onlyPractitioners}}">
         </poly-filter>
+        <poly-filter
+                array-to-filter="[[appointments]]"
+                filter="[[eventDate]] [[pracEmail]]"
+                filtered-array="{{appointmentsByPractitioner}}">
+        </poly-filter>
         <iron-pages selected="[[appPage]]" attr-for-selected="name">
             <div name="schedule">
                 <div class="center-button">
@@ -129,8 +137,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </div>
         </iron-pages>
         <paper-dialog id="addEventDialog"
+                      class="add-event-dialog"
                       no-cancel-on-outside-click
-                      class="paper-date-picker-dialog"
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
             <h2>Add Appointment</h2>
@@ -158,13 +166,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </div>
                 <div class="right-form">
                     <paper-input name="appDatePicker" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})" id="eventDate"
-                                 label="Event Date" value="{{appDate}}" on-tap="openDialog" placeholder="YYYY-MM-DD"
+                                 label="Event Date" value="[[appDate]]" on-tap="openDialog" placeholder="YYYY-MM-DD"
                                  required auto-validate></paper-input>
                     <paper-input id="startTimeInput" label="Start Time" required on-tap="openDialog"
-                                 name="startTimeDialog"
-                                 value="[[startTime]]"></paper-input>
+                                 name="startTimeDialog" auto-validate value="[[startTime]]"></paper-input>
                     <paper-input id="endTimeInput" label="End Time" required on-tap="openDialog" name="endTimeDialog"
-                                 value="[[endTime]]"></paper-input>
+                                 value="[[endTime]]" auto-validate></paper-input>
                     <div class="buttons">
                         <paper-button dialog-dismiss>close</paper-button>
                         <paper-button on-tap="saveNewEvent">Save</paper-button>
@@ -232,7 +239,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 practitionerAppointments: {
                     type: Array,
                     value: []
-                }
+                },
+                pracEmail: String
             },
 
             listeners: {
@@ -341,12 +349,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 }
                 console.log(this.storePatient)
                 return this.storePatient;
-//                patient.birthdate = temp.birthdate;
-//                patient.city;
-//                patient.email
-//                patient.firstName
-//                patient.lastName
-//                patient.
             },
 
             grabPractitioner: function () {
@@ -372,14 +374,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     this.$.endTimeInput.validate())) {
                     return false;
                 }
-                var fixedDate = this.eventDate.replace(/\//g, '-');
-                var someTitle = this.$.title.value;
-                var startTime = moment(this.startTime, ["h:mm A"]).format("HH:mm");
-                var endTime = moment(this.endTime, ["h:mm A"]).format("HH:mm");
-                if (moment(this.startTime, ["h:mm A"]).isAfter(moment(this.endTime, ["h:mm A"]))) {
+                var fixedDate = this.eventDate.replace(/\//g, '-')
+                var weekDate = moment(fixedDate).weekday()
+                this.pracEmail = this.$.practitionerItem.selectedItem.email
+                var start = moment(this.startTime, ["h:mm A"])
+                var end = moment(this.endTime, ["h:mm A"])
+                if(weekDate == 0 || weekDate == 6) {
+                    this.$.eventDate.errorMessage = "We are open Monday through Friday"
+                    this.$.eventDate.invalid = true;
                     return false
                 }
-
+                if (start.isAfter(end)) {
+                    this.$.startTimeInput.errorMessage = "Start time is after end time"
+                    this.$.startTimeInput.invalid = true;
+                    return false
+                }
+                if (start.isBefore(moment("8:00", ["HH:mm"])) || end.isAfter(moment("17:00", ["HH:mm"]))) {
+                    this.$.startTimeInput.errorMessage = "Business hours are from 8AM to 5PM";
+                    this.$.endTimeInput.errorMessage = "Business hours are from 8AM to 5PM"
+                    this.$.endTimeInput.invalid = true;
+                    this.$.startTimeInput.invalid = true;
+                    return false
+                }
+                var appStart = moment(this.appointmentsByPractitioner[0].startTime, ["HH:mm"])
+                var appEnd = moment(this.appointmentsByPractitioner[0].endTime, ["HH:mm"])
+                if(start.isBetween(appStart,appEnd) || end.isBetween(appStart,appEnd)) {
+                    this.$.startTimeInput.errorMessage = "Time conflict with another appointment";
+                    this.$.endTimeInput.errorMessage = "Time conflict with another appointment"
+                    this.$.endTimeInput.invalid = true;
+                    this.$.startTimeInput.invalid = true;
+                    return false
+                }
                 return true
             },
 
@@ -391,6 +416,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     defaultView: 'agendaWeek',
                     editable: false,
                     events: this.appointments,
+                    businessHours: {
+                        dow: [1, 2, 3, 4, 5], // Monday - Friday
+                        start: '08:00', // Opens at 8:00 PM
+                        end: '17:00', // Closes at 5:00 PM
+                    },
                     eventClick: function (calEvent, jsEvent, view) {
                         document.querySelector('schedule-page').fire('viewApp', {
                             calEvent: calEvent,
