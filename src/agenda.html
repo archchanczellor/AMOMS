@@ -249,7 +249,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             observers: [
-                '_appointmentsChange(appointments.splices, userData.email, userData.role)',
+                '_appointmentsChange(appointments.splices, userData.$key, userData.role)',
                 '_routePageChanged(appData.appointment)',
             ],
 
@@ -288,12 +288,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 console.log('test')
             },
 
-            _appointmentsChange(a, email, role) {
+            _appointmentsChange(a, key, role) {
                 if (role == "Administrator" || role == "Secretary") {
                     $("#calendar").fullCalendar('removeEvents')
                     $("#calendar").fullCalendar('addEventSource', this.appointments)
                 }
-                else if (this.appointments[this.iter].practitioner.email == email) {
+                else if (this.appointments[this.iter].practitioner.$key == key) {
                     this.push('practitionerAppointments', this.appointments[this.iter])
                     $("#calendar").fullCalendar('removeEvents')
                     $("#calendar").fullCalendar('addEventSource', this.practitionerAppointments)
@@ -315,54 +315,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             saveNewEvent: function () {
                 if (this.validateEvent()) {
                     var fixedDate = this.appDate;
-                    var patient = this.grabPatient();
-                    var practitioner = this.grabPractitioner();
+                    var practitioner = this.$.practitionerItem.selectedItem;
+//                    var patient = this.grabPatient();
+//                    var practitioner = this.grabPractitioner();
                     var startTime = moment(this.startTime, ["h:mm A"]).format("HH:mm");
                     var endTime = moment(this.endTime, ["h:mm A"]).format("HH:mm");
                     var newEvent = {
-                        title: this.$.title.value,
+                        title: this.$.title.value + " - " + practitioner.firstName + " " + practitioner.lastName,
                         start: fixedDate + "T" + startTime,
                         end: fixedDate + "T" + endTime,
                         startTime: startTime,
                         endTime: endTime,
                         eventDate: fixedDate,
-                        patient: patient,
+                        status: 'upcoming',
+                        patient: this.$.patientItem.selectedItem.$key,
                         description: this.$.eventDescription.value,
-                        practitioner: practitioner,
+                        practitioner: practitioner.$key,
                         backgroundColor: '#FFEA00'
                     }
+                    //status: canceled, noShow, upComing, inProgress, concluded
                     this.$.docAppointments.data = newEvent;
                     this.$.docAppointments.save('/appointments/');
                     this.$.addEventDialog.close();
                 }
                 else
                     console.log('error')
-            },
-
-            grabPatient: function () {
-                this.storePatient = {};
-                var temp = this.$.patientItem.selectedItem;
-                for (var k in temp) {
-                    if (temp.hasOwnProperty(k)) {
-                        if (k != '$key')
-                            this.storePatient[k] = temp[k]
-                    }
-                }
-                console.log(this.storePatient)
-                return this.storePatient;
-            },
-
-            grabPractitioner: function () {
-                this.storePatient = {};
-                var temp = this.$.practitionerItem.selectedItem;
-                for (var k in temp) {
-                    if (temp.hasOwnProperty(k)) {
-                        if (k != '$key')
-                            this.storePatient[k] = temp[k]
-                    }
-                }
-                console.log(this.storePatient)
-                return this.storePatient;
             },
 
             validateEvent: function () {
@@ -380,7 +357,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.pracEmail = this.$.practitionerItem.selectedItem.email
                 var start = moment(this.startTime, ["h:mm A"])
                 var end = moment(this.endTime, ["h:mm A"])
-                if(weekDate == 0 || weekDate == 6) {
+                if (weekDate == 0 || weekDate == 6) {
                     this.$.eventDate.errorMessage = "We are open Monday through Friday"
                     this.$.eventDate.invalid = true;
                     return false
@@ -399,7 +376,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 }
                 var appStart = moment(this.appointmentsByPractitioner[0].startTime, ["HH:mm"])
                 var appEnd = moment(this.appointmentsByPractitioner[0].endTime, ["HH:mm"])
-                if(start.isBetween(appStart,appEnd) || end.isBetween(appStart,appEnd)) {
+                if (start.isBetween(appStart, appEnd) || end.isBetween(appStart, appEnd)) {
                     this.$.startTimeInput.errorMessage = "Time conflict with another appointment";
                     this.$.endTimeInput.errorMessage = "Time conflict with another appointment"
                     this.$.endTimeInput.invalid = true;
