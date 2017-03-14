@@ -357,6 +357,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.pracEmail = this.$.practitionerItem.selectedItem.email
                 var start = moment(this.startTime, ["h:mm A"])
                 var end = moment(this.endTime, ["h:mm A"])
+                if (moment(fixedDate).isBefore(moment())) {
+                    this.$.eventDate.errorMessage = "Please choose a date before today"
+                    this.$.eventDate.invalid = true;
+                    return false
+                }
                 if (weekDate == 0 || weekDate == 6) {
                     this.$.eventDate.errorMessage = "We are open Monday through Friday"
                     this.$.eventDate.invalid = true;
