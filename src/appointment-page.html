@@ -15,7 +15,7 @@
                 @apply(--layout-horizontal);
                 @apply(--layout-center);
             }
-            .canceled {
+            .cancelled {
                 background-color: #F44336;
                 color: white
             }
@@ -34,25 +34,58 @@
                 text-transform: uppercase;
             }
         </style>
-        <div class="horizontal-around">
-            <div class="horizontal">
-                <div class="horizontal-center">
-                Appointment Status: &nbsp
-                </div>
-                <paper-material id="statusPill" elevation="1">
-                    [[appointmentTest.status]]
-                    <paper-dropdown-menu label="Appointment Status" id="editStatus" name="Status" required>
-                        <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.status)}}">
-                            <paper-item name="upcoming" value="upcoming">Upcoming</paper-item>
-                            <paper-item name="cancelled" value="cancelled">Cancelled</paper-item>
-                            <paper-item name="in-progress" value="in-progress">In-Progress</paper-item>
-                            <paper-item name="complete" value="complete">Complete</paper-item>
-                            <paper-item name="no-show" value="no-show">No-show</paper-item>
-                        </paper-menu>
-                    </paper-dropdown-menu>
-                </paper-material>
-            </div>
-        </div>
+        <firebase-app api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI"
+                      name="secondary"
+                      auth-domain="amoms-9ecf6.firebaseapp.com"
+                      database-url="https://amoms-9ecf6.firebaseio.com"
+                      storage-bucket="amoms-9ecf6.appspot.com"></firebase-app>
+        <firebase-auth id="appointmentStatus" app-name="secondary" status="{{tempStatus}}" provider="google"
+                       on-error="showError"></firebase-auth>
+        <firebase-query
+                id="queryAppointment"
+                app-name="primary"
+                path="/schedule/appointment/{uid}"
+                data="{{dataQuery}}"></firebase-query>
+        <firebase-document
+                id="saveAppointmentStatus"
+                app-name="primary"
+                path="/schedule/appointment/{uid}"
+                data="{{appointmentData}}"></firebase-document>
+        <firebase-auth id="primaryAuth" app-name="primary" status="{{status}}" provider="google"
+                       on-error="showError"></firebase-auth>
+        <paper-dialog id="editAppointmentStatus"
+                      no-cancel-on-outside-click
+                      class=""
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <form is="iron-form" id="appointmentStatusForm">
+                <h2>Edit Appointment Status</h2>
+                    <div class="horizontal-around">
+                        <div class="horizontal">
+                            <div class="horizontal-center">
+                            Appointment Status: &nbsp
+                            </div>
+                            <paper-material id="statusPill" elevation="1">
+                                [[appointmentTest.status]]
+                                <paper-dropdown-menu label="Appointment Status" id="editStatus" name="Status" required>
+                                    <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.status)}}">
+                                        <paper-item name="upcoming" value="upcoming">Upcoming</paper-item>
+                                        <paper-item name="cancelled" value="cancelled">Cancelled</paper-item>
+                                        <paper-item name="in-progress" value="in-progress">In-Progress</paper-item>
+                                        <paper-item name="complete" value="complete">Complete</paper-item>
+                                        <paper-item name="no-show" value="no-show">No-show</paper-item>
+                                    </paper-menu>
+                                </paper-dropdown-menu>
+                            </paper-material>
+                        </div>
+                        <div class="buttons">
+                            <paper-button dialog-dismiss>Close</paper-button>
+                            <paper-button on-tap="_saveStatus">Submit</paper-button>
+                        </div>
+                    </div>
+            </form>
+        </paper-dialog>
+        <paper-toast id="appointmentToast" text="{{toastMessage}}"></paper-toast>
     </template>
 
     <script>
@@ -70,15 +103,6 @@
                 toastMessage: String,
                 key: String
             },
-
-            observers: [
-                'changedStatus(appointmentTest.status)'
-            ],
-
-            changedStatus: function(status) {
-//                todo: fix this
-            },
-
             _computeSelected: function (status) {
                 if (status == 'upcoming')
                     return 0;
@@ -90,6 +114,41 @@
                     return 3
                 else
                     return 4
+            },
+            saveAppointmentData: function () {
+                this.$.saveAppointmentData.data = {
+                    status: this.$.status.value
+                }
+                this.$.saveAppointmentData.save('/schedule/appointment/{uid}', this.key).then(function () {
+                    document.querySelector('#editAppointmentStatus').close();
+                    document.querySelector('appointment-page').toastMessage = "User has been added!";
+                }, function (e) {
+                    document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#appointmentToast').open();
+                })
+
+            },
+            _saveAppointment: function () {
+                var key = this.userEdit.$key;
+                var tempData = $("#appointmentStatusForm :input").serializeObject();
+                tempData.status = this.$.editStatus.value;
+                this.$.saveAppointmentData.data = tempData;
+                this.$.saveAppointmentData.save('/schedule/appointment/{uid}', key).then(function () {
+                    document.querySelector('#editAppointmentStatus').close();
+                    document.querySelector('appointment-page').toastMessage = "User has been updated!";
+                    document.querySelector('#appointmentToast').open();
+                    document.querySelector('appointment-page').userEdit = null;
+                }, function () {
+                    document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#appointmentToast').open();
+                })
+            },
+            observers: [
+                'changedStatus(appointmentTest.status)'
+            ],
+
+            changedStatus: function(status) {
+//                todo: fix this
             },
 
             ready: function() {
