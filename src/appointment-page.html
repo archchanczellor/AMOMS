@@ -85,6 +85,7 @@
                     </div>
             </form>
         </paper-dialog>
+        <paper-toast id="appointmentToast" text="{{toastMessage}}"></paper-toast>
     </template>
 
     <script>
@@ -114,34 +115,32 @@
                 else
                     return 4
             },
-            \\need to finish
             saveAppointmentData: function () {
                 this.$.saveAppointmentData.data = {
                     status: this.$.status.value
                 }
-                this.$.saveUserData.save('/users', this.key).then(function () {
-                    document.querySelector('#addUserDialog').close();
-                    document.querySelector('users-admin').toastMessage = "User has been added!";
+                this.$.saveAppointmentData.save('/schedule/appointment/{uid}', this.key).then(function () {
+                    document.querySelector('#editAppointmentStatus').close();
+                    document.querySelector('appointment-page').toastMessage = "User has been added!";
                 }, function (e) {
-                    document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#userToast').open();
+                    document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#appointmentToast').open();
                 })
 
             },
-            \\need to finish
             _saveAppointment: function () {
                 var key = this.userEdit.$key;
                 var tempData = $("#appointmentStatusForm :input").serializeObject();
-                tempData.role = this.$.editStatus.value;
-                this.$.saveUserData.data = tempData;
-                this.$.saveUserData.save('/users/', key).then(function () {
-                    document.querySelector('#editUserDialog').close();
-                    document.querySelector('users-admin').toastMessage = "User has been updated!";
-                    document.querySelector('#userToast').open();
-                    document.querySelector('users-admin').userEdit = null;
+                tempData.status = this.$.editStatus.value;
+                this.$.saveAppointmentData.data = tempData;
+                this.$.saveAppointmentData.save('/schedule/appointment/{uid}', key).then(function () {
+                    document.querySelector('#editAppointmentStatus').close();
+                    document.querySelector('appointment-page').toastMessage = "User has been updated!";
+                    document.querySelector('#appointmentToast').open();
+                    document.querySelector('appointment-page').userEdit = null;
                 }, function () {
-                    document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#userToast').open();
+                    document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#appointmentToast').open();
                 })
             },
             observers: [
