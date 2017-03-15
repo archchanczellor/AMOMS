@@ -249,7 +249,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             observers: [
-                '_appointmentsChange(appointments.splices, userData.$key, userData.role)',
+                '_appointmentsChange(appointments.splices, userData.role)',
                 '_routePageChanged(appData.appointment)',
             ],
 
@@ -288,16 +288,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 console.log('test')
             },
 
-            _appointmentsChange(a, key, role) {
+            _appointmentsChange(a, role) {
                 if (role == "Administrator" || role == "Secretary") {
                     $("#calendar").fullCalendar('removeEvents')
                     $("#calendar").fullCalendar('addEventSource', this.appointments)
                 }
-                else if (this.appointments[this.iter].practitioner.$key == key) {
-                    this.push('practitionerAppointments', this.appointments[this.iter])
-                    $("#calendar").fullCalendar('removeEvents')
-                    $("#calendar").fullCalendar('addEventSource', this.practitionerAppointments)
-                    this.iter++
+                else if (this.iter != this.appointments.length) {
+                    for (this.iter; this.iter < this.appointments.length; this.iter++) {
+                        if (this.appointments[this.iter].practitioner == this.user.uid) {
+                            this.push('practitionerAppointments', this.appointments[this.iter])
+                            $("#calendar").fullCalendar('removeEvents')
+                            $("#calendar").fullCalendar('addEventSource', this.practitionerAppointments)
+                        }
+                    }
                 }
             },
 
