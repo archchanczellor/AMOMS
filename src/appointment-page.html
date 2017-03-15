@@ -70,6 +70,15 @@
                 toastMessage: String,
                 key: String
             },
+
+            observers: [
+                'changedStatus(appointmentTest.status)'
+            ],
+
+            changedStatus: function(status) {
+//                todo: fix this
+            },
+
             _computeSelected: function (status) {
                 if (status == 'upcoming')
                     return 0;
@@ -81,13 +90,6 @@
                     return 3
                 else
                     return 4
-            },
-            observers: [
-                'changedStatus(appointmentTest.status)'
-            ],
-
-            changedStatus: function(status) {
-//                todo: fix this
             },
 
             ready: function() {

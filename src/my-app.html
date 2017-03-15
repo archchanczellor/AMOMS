@@ -21,11 +21,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/neon-animation/neon-animations.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
 <link rel="import" href="logout.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
-<!--<link rel="import" href="my-icons.html">-->
+
+<script src="../bower_components/moment/moment.js"></script>
 
 <dom-module id="my-app">
 
@@ -64,18 +66,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 color: black;
                 font-weight: bold;
             }
-			
-			.horizontal-layout {
+
+            .vertical-layout {
+                @apply(--layout-vertical);
+            }
+
+            .horizontal-layout {
                 @apply(--layout-horizontal);
             }
-			
-			.left-form {
+
+            .horizontal-center {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .left-form {
                 padding-right: 10px;
-                width: 50%;
+                /*width: 100%;*/
             }
 
             .right-form {
-                width: 50%;
+                /*width: 100%;*/
             }
 
             .drawer-list div.subroute {
@@ -87,6 +98,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 @apply(--layout-end-justified);
                 margin-top: 20px;
             }
+
+            .appTitle {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+
+            .appStatus {
+                text-transform: capitalize;
+            }
+
         </style>
         <app-location route="{{route}}"></app-location>
         <app-route
@@ -103,6 +124,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                        on-error="handleError"></firebase-auth>
         <firebase-document id="filterUsers" app-name="primary" path="/users/{{user.uid}}"
                            data="{{filteredUser}}"></firebase-document>
+        <firebase-document id="patientApp" app-name="primary" path="/patients/{{patientKey}}"
+                           data="{{appointmentPatient}}"></firebase-document>
+        <firebase-document id="pracApp" app-name="primary" path="/users/{{pracKey}}"
+                           data="{{appointmentPrac}}"></firebase-document>
         <app-drawer-layout fullbleed force-narrow>
             <!-- Drawer content -->
             <app-drawer>
@@ -163,23 +188,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-dialog modal id="viewAppDialog" no-cancel-on-outside-click
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
-			<div class="horizontal-layout">
-			<div class="left-form">
-            <paper-item><b>Title:</b>[[appDetail.title]]</paper-item><br>
-			<paper-item><b>Date:</b>[[appDetail.eventDate]]</paper-item><br>
-			<paper-item><b>Description:</b>[[appDetail.description]]</paper-item>
-			</div>
-			<div class="right-form">
-			<paper-item><b>Start:</b>[[appDetail.start]]</paper-item><br>
-			<paper-item><b>End:</b>[[appDetail.end]]</paper-item>
-			</div>
-			</div>
-			
-			</div>
+            <div class="vertical-layout">
+                <div class="horizontal-center">
+                    <h2 class="appTitle">[[appDetail.title]]</h2>
+                </div>
+                <div class="horizontal-layout">
+                    <div class="left-form">
+                        <p><b>Description: &nbsp</b>[[appDetail.description]]</p>
+                        <p><b>Patient: &nbsp</b>[[appointmentPatient.fullName]]</p>
+                        <p><b>Practitioner: &nbsp</b>[[appointmentPrac.firstName]] [[appointmentPrac.lastName]]</p>
+                        <p><b>Status: </b><span class="appStatus">[[appDetail.status]]</span></p>
+                    </div>
+                    <div>
+                        <p><b>Date: &nbsp</b>[[appDetail.eventDate]]</p>
+                        <p><b>Start: &nbsp</b>[[appStart]]</p>
+                        <p><b>End: &nbsp</b>[[appEnd]]</p>
+                    </div>
+                </div>
+            </div>
 
             <div class="buttons">
                 <paper-button dialog-dismiss>Cancel</paper-button>
-                <paper-button on-tap="editApp">Edit</paper-button>
+                <paper-button hidden$="[[!_computeSecretaryView(filteredUser.role)" on-tap="editApp">Edit</paper-button>
                 <paper-button hidden$="[[!_computePractitionerView(filteredUser.role)]]" on-tap="viewApp">View
                 </paper-button>
             </div>
@@ -238,7 +268,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 else
                     return false
             },
-            _computeAdminView: function(role) {
+            _computeAdminView: function (role) {
                 if (role == "Administrator")
                     return true
                 else
@@ -253,28 +283,47 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 ////                    window.history.replaceState({}, null, '/login');
 //                    this.page = 'login';
 //                }
-            }
-            ,
+            },
 
             _pageChanged: function (page) {
                 // Load page import on demand. Show 404 page if fails
                 var resolvedPageUrl = this.resolveUrl(page + '.html');
                 this.importHref(resolvedPageUrl, null, this._showPage404, true);
-            }
-            ,
+            },
 
             _showPage404: function () {
                 this.page = 'view404';
-            }
-            ,
+            },
+
+            _computeStatus: function (status) {
+                if (status == 'upcoming')
+                    return 0;
+                else if (status == 'cancelled')
+                    return 1
+                else if (status == 'in-progress')
+                    return 2
+                else if (status == 'complete')
+                    return 3
+                else
+                    return 4
+            },
 
             openAppDialog: function (e) {
                 this.appDetail = e.detail.calEvent;
-                this.$.viewAppDialog.open();
-            }
+                this.pracKey = e.detail.calEvent.practitioner
+                this.patientKey = e.detail.calEvent.patient
+                this.appStart = moment(e.detail.calEvent.startTime, ['HH:mm']).format('h:mm A')
+                this.appEnd = moment(e.detail.calEvent.endTime, ['HH:mm']).format('h:mm A')
 
+                this.$.viewAppDialog.open();
+            },
+
+            viewApp: function () {
+                this.$.viewAppDialog.close();
+                window.history.pushState({}, null, '/agenda/appointment/' + this.appDetail.$key);
+                window.dispatchEvent(new CustomEvent('location-changed'));
+            }
         })
-        ;
 
     </script>
 

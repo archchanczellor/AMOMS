@@ -119,8 +119,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </poly-filter>
         <poly-filter
                 array-to-filter="[[appointments]]"
-                filter="[[eventDate]] [[pracEmail]]"
-                filtered-array="{{appointmentsByPractitioner}}">
+                filter="[[appDate]]"
+                filtered-array="{{appointmentsByDate}}"
+                filter-by="eventDate">
         </poly-filter>
         <iron-pages selected="[[appPage]]" attr-for-selected="name">
             <div name="schedule">
@@ -241,7 +242,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: Array,
                     value: []
                 },
-                pracEmail: String
+                pracKey: String
             },
 
             listeners: {
@@ -316,6 +317,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             saveNewEvent: function () {
+                this.pracKey = this.$.practitionerItem.selectedItem.$key
                 if (this.validateEvent()) {
                     var fixedDate = this.appDate;
                     var practitioner = this.$.practitionerItem.selectedItem;
@@ -330,11 +332,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         startTime: startTime,
                         endTime: endTime,
                         eventDate: fixedDate,
+                        className: 'upcoming',
                         status: 'upcoming',
                         patient: this.$.patientItem.selectedItem.$key,
                         description: this.$.eventDescription.value,
                         practitioner: practitioner.$key,
-                        backgroundColor: '#FFEA00'
+                        backgroundColor: '#FFEA00',
+                        color: 'black',
+                        textColor: 'black'
                     }
                     //status: canceled, noShow, upComing, inProgress, concluded
                     this.$.docAppointments.data = newEvent;
@@ -357,10 +362,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 }
                 var fixedDate = this.eventDate.replace(/\//g, '-')
                 var weekDate = moment(fixedDate).weekday()
-                this.pracEmail = this.$.practitionerItem.selectedItem.email
                 var start = moment(this.startTime, ["h:mm A"])
                 var end = moment(this.endTime, ["h:mm A"])
-                if (moment(fixedDate).isBefore(moment())) {
+                if (!(moment(fixedDate).isSameOrAfter(moment(moment().format('YYYY-MM-DD'))))) {
                     this.$.eventDate.errorMessage = "Please choose a date before today"
                     this.$.eventDate.invalid = true;
                     return false
@@ -382,14 +386,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     this.$.startTimeInput.invalid = true;
                     return false
                 }
-                var appStart = moment(this.appointmentsByPractitioner[0].startTime, ["HH:mm"])
-                var appEnd = moment(this.appointmentsByPractitioner[0].endTime, ["HH:mm"])
-                if (start.isBetween(appStart, appEnd) || end.isBetween(appStart, appEnd)) {
-                    this.$.startTimeInput.errorMessage = "Time conflict with another appointment";
-                    this.$.endTimeInput.errorMessage = "Time conflict with another appointment"
-                    this.$.endTimeInput.invalid = true;
-                    this.$.startTimeInput.invalid = true;
-                    return false
+                if(this.appointmentsByDate.length != 0) {
+                    var appDate = this.appointmentsByDate;
+                    for(var i = 0; i < appDate.length; i++) {
+                        if(appDate[i].practitioner == this.pracKey) {
+                            var appStart = moment(appDate[i].startTime, ["HH:mm"])
+                            var appEnd = moment(appDate[i].endTime, ["HH:mm"])
+                            if (start.isBetween(appStart, appEnd, null, '[)') || end.isBetween(appStart, appEnd, null, '(]')) {
+                                this.$.startTimeInput.errorMessage = "Time conflict with another appointment";
+                                this.$.endTimeInput.errorMessage = "Time conflict with another appointment"
+                                this.$.endTimeInput.invalid = true;
+                                this.$.startTimeInput.invalid = true;
+                                return false
+                            }
+                        }
+                    }
                 }
                 return true
             },
