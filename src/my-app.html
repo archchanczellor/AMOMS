@@ -649,7 +649,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     this.$.editStartTimeInput.invalid = true;
                 }
                 if (start.isBefore(moment("8:00", ["HH:mm"])) || end.isAfter(moment("18:00", ["HH:mm"]))) {
-                    this.$.editStartTimeInput.errorMessage = "Business hours are from 8AM to 56M";
+                    this.$.editStartTimeInput.errorMessage = "Business hours are from 8AM to 6PM";
                     this.$.editEndTimeInput.errorMessage = "Business hours are from 8AM to 6PM"
                     this.$.editEndTimeInput.invalid = true;
                     this.$.editStartTimeInput.invalid = true;
