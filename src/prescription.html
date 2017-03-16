@@ -105,13 +105,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 prescription: {
                     type: Object,
                     value: null
-                }
+                },
+                patientKey: String
             },
 
             addPrescription: function () {
                 var data = $("#addPrescriptionForm :input").serializeObject();
+                var key = this.patientKey
                 this.$.document.data = data;
-                this.$.document.save('/prescriptions/').then(function () {
+                this.$.document.save('/prescriptions/', key).then(function () {
                     document.querySelector('prescription-page').toastMessage = "Prescription has been added!";
                     document.querySelector('#prescriptionToast').open();
                 }, function () {

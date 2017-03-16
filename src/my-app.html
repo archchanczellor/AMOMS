@@ -229,7 +229,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <a href="/agenda/schedule" drawer-toggle>Schedule</a>
                     </div>
                     <div hidden$="[[!_computeSecretaryView(filteredUser.role)]]" name="patient">
-                        <a href="/patient" drawer-toggle>Patient</a>
+                        <a href="/patient" drawer-toggle>Patients</a>
                     </div>
                     <div hidden$="[[!_computeAdminView(filteredUser.role)]]" name="users">
                         <a href="/users" drawer-toggle>Admin</a>
@@ -256,7 +256,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 <a href="/agenda/schedule">Schedule</a>
                             </paper-tab>
                             <paper-tab hidden$="[[!_computeSecretaryView(userRole)]]" name="patient">
-                                <a href="/patient">Patient</a>
+                                <a href="/patient">Patients</a>
                             </paper-tab>
                             <paper-tab hidden$="[[!_computeAdminView(userRole)]]" name="users">
                                 <a href="/users">Admin</a>
@@ -298,16 +298,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </div>
                 <div hidden$="[[edit]]" class="horizontal-justified">
                     <div class="left-form">
-                        <paper-item><b>Patient: &nbsp</b>[[appointmentPatient.fullName]]</paper-item>
-                        <paper-item><b>Practitioner: &nbsp</b>[[appointmentPrac.firstName]] [[appointmentPrac.lastName]]
+                        <paper-item><b>Patient: &nbsp;</b>[[appointmentPatient.fullName]]</paper-item>
+                        <paper-item><b>Practitioner: &nbsp;</b>[[appointmentPrac.firstName]] [[appointmentPrac.lastName]]
                         </paper-item>
-                        <paper-item><b>Description: &nbsp</b>[[appDetail.description]]</paper-item>
-                        <paper-item><b>Status: &nbsp</b><span class="appStatus">[[appDetail.status]]</span></paper-item>
+                        <paper-item><b>Description: &nbsp;</b>[[appDetail.description]]</paper-item>
+                        <paper-item><b>Status: &nbsp;</b><span class="appStatus">[[appDetail.status]]</span></paper-item>
                     </div>
                     <div>
-                        <paper-item><b>Date: &nbsp</b>[[humanDate]]</paper-item>
-                        <paper-item><b>Start: &nbsp</b>[[editStartTime]]</paper-item>
-                        <paper-item><b>End: &nbsp</b>[[editEndTime]]</paper-item>
+                        <paper-item><b>Date: &nbsp;</b>[[humanDate]]</paper-item>
+                        <paper-item><b>Start: &nbsp;</b>[[editStartTime]]</paper-item>
+                        <paper-item><b>End: &nbsp;</b>[[editEndTime]]</paper-item>
                     </div>
                 </div>
                 <div hidden$="[[!edit]]" class="horizontal-justified">
@@ -477,7 +477,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             _computeEditButtonView: function (role, status) {
-                if (status == "Completed" || status == "In Progress")
+                if (status == "Concluded" || status == "In-Progress")
                     return false
                 else if (role == "Secretary" || role == "Administrator")
                     return true
@@ -486,7 +486,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             _computeCheckInButtonView: function (role, status) {
-                if (status == "Ready" || status == "Completed" || status == "In Progress")
+                if (status == "Ready" || status == "Concluded" || status == "In-Progress")
                     return false
                 else if (role == "Secretary" || role == "Administrator")
                     return true
@@ -580,7 +580,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             viewApp: function () {
                 this.$.viewAppDialog.close();
-                window.history.pushState({}, null, '/agenda/appointment/' + this.appKey);
+//                document.querySelector('appointment-page').appKey = this.appKey;
+                window.history.pushState({}, null, '/agenda/appointment?' + this.appKey);
                 window.dispatchEvent(new CustomEvent('location-changed'));
             },
             editApp: function () {
