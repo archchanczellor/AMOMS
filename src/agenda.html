@@ -95,6 +95,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             .add-event-dialog {
                 min-width: 500px;
             }
+
+            .horizontal-justified {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+            }
+            .pageTitle {
+                margin: 20px;
+                font-size: 32px;
+                font-weight: 300;
+                font-family: Roboto;
+            }
         </style>
         <firebase-auth id="agendaAuth" user="{{user}}" app-name="primary" provider="google"
                        on-error="handleError"></firebase-auth>
@@ -106,7 +117,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <firebase-query id="practitioners" app-name="primary" path="/users" data="{{practitioners}}"></firebase-query>
         <firebase-document id="docAppointments" app-name="primary" path="/appointments/"
                            data="{{newApp}}"></firebase-document>
-
         <app-route
                 route="{{route}}"
                 pattern="/:appointment"
@@ -125,7 +135,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </poly-filter>
         <iron-pages selected="[[appPage]]" attr-for-selected="name">
             <div name="schedule">
-                <div class="center-button">
+                <div class="horizontal-justified">
+                    <div class="pageTitle">Schedule</div>
                     <paper-button raised on-tap="openDialog" data-arg="addEventDialog" class="add-event-button">Add
                         Appointment
                     </paper-button>
@@ -200,7 +211,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <paper-button dialog-confirm>OK</paper-button>
             </div>
         </paper-dialog>
-
+        <paper-toast id="agendaToast" text="{{toastMessage}}"></paper-toast>
     </template>
     <script>
         Polymer({
@@ -238,6 +249,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: Number,
                     value: 0
                 },
+                toastMessage: String,
                 practitionerAppointments: {
                     type: Array,
                     value: []
@@ -246,7 +258,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             listeners: {
-//                'viewApp': 'goToAppointment'
+                'updateAgenda': 'handleAgendaUpdate'
             },
 
             observers: [
@@ -289,7 +301,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 console.log('test')
             },
 
-            _appointmentsChange(a, role) {
+            _appointmentsChange: function (a, role) {
                 if (role == "Administrator" || role == "Secretary") {
                     $("#calendar").fullCalendar('removeEvents')
                     $("#calendar").fullCalendar('addEventSource', this.appointments)
@@ -303,6 +315,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         }
                     }
                 }
+            },
+
+            handleAgendaUpdate: function () {
+                this.async(function () {
+                    if (this.userData.role == "Administrator" || this.userData.role == "Secretary") {
+                        $("#calendar").fullCalendar('removeEvents')
+                        $("#calendar").fullCalendar('addEventSource', this.appointments)
+                    }
+                    else if (this.appointments.length != 0) {
+                        for (var i = 0; i < this.appointments.length; i++) {
+                            if (this.appointments[i].practitioner == this.user.uid) {
+                                this.push('practitionerAppointments', this.appointments[i])
+                                $("#calendar").fullCalendar('removeEvents')
+                                $("#calendar").fullCalendar('addEventSource', this.practitionerAppointments)
+                            }
+                        }
+                    }
+                }, 1000)
             },
 
             openDialog: function (e) {
@@ -343,7 +373,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     }
                     //status: canceled, noShow, upComing, inProgress, concluded
                     this.$.docAppointments.data = newEvent;
-                    this.$.docAppointments.save('/appointments/');
+                    this.$.docAppointments.save('/appointments/').then(function () {
+                        //success
+                        document.querySelector('#title').value = null
+                        document.querySelector('#eventDate').value = null
+                        document.querySelector('#practitionerItem').value = null
+                        document.querySelector('#patientItem').value = null
+                        document.querySelector('#eventDescription').value = null
+                        document.querySelector('#startTimeInput').value = null
+                        document.querySelector('#endTimeInput').value = null
+                        document.querySelector('#addEventDialog').close
+                    }, function () {
+                        document.querySelector('schedule-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                        document.querySelector('#agendaToast').open();
+                    })
                     this.$.addEventDialog.close();
                 }
                 else
@@ -417,7 +460,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     weekends: false,
                     height: "auto",
                     width: 650,
-                    slotEventOverlap: false,
                     defaultView: 'agendaWeek',
                     editable: false,
                     events: this.appointments,
@@ -427,10 +469,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         end: '18:00', // Closes at 6:00 PM
                     },
                     eventClick: function (calEvent, jsEvent, view) {
+                        var pracitioners = document.querySelector('schedule-page').onlyPractitioners
+                        var patients = document.querySelector('schedule-page').patients
                         document.querySelector('schedule-page').fire('viewApp', {
                             calEvent: calEvent,
                             jsEvent: jsEvent,
-                            view: view
+                            view: view,
+                            patients: patients,
+                            practitioners: pracitioners
                         })
                     }
                 })

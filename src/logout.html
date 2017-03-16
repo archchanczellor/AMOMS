@@ -51,7 +51,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         Polymer({
             is: 'logout-account',
             _logout: function () {
-                this.$.logoutAuth.signOut();
+                document.querySelector('#mainAuth').signOut();
+                document.querySelector('my-app').userRole = null;
                 window.history.pushState({}, null, '/login');
                 window.dispatchEvent(new CustomEvent('location-changed'));
             }

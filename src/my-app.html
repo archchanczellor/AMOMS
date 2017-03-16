@@ -21,11 +21,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/neon-animation/neon-animations.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
 <link rel="import" href="logout.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/poly-filter/poly-filter.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
 
 <script src="../bower_components/moment/moment.js"></script>
 
@@ -33,7 +36,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <template>
 
-        <style>
+        <style include="shared-styles">
 
             :host {
                 display: block;
@@ -67,6 +70,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 font-weight: bold;
             }
 
+            app-toolbar {
+                width: 95vw;
+                margin: auto;
+                --app-toolbar-font-size: 20px;
+            }
+
             .vertical-layout {
                 @apply(--layout-vertical);
             }
@@ -78,6 +87,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             .horizontal-center {
                 @apply(--layout-horizontal);
                 @apply(--layout-center);
+            }
+
+            .horizontal-justified {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+                width: 100%;
             }
 
             .left-form {
@@ -99,15 +114,75 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 margin-top: 20px;
             }
 
+            .status-buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
+
             .appTitle {
                 text-align: center;
                 margin-bottom: 15px;
+                width: 100%;
             }
 
             .appStatus {
                 text-transform: capitalize;
             }
 
+            .app-status-buttons {
+                max-width: 90%;
+            }
+
+            .cancel-button {
+                background-color: #F44336;
+                color: white;
+            }
+
+            paper-tabs {
+                height: 100%;
+            }
+
+            paper-tabs {
+                --paper-tabs-selection-bar-color: white;
+            }
+
+            paper-tab, paper-tab a {
+                height: 100%;
+                padding: 0 10px;
+                --paper-tab-ink: white;
+
+                text-decoration: none;
+                text-transform: uppercase;
+
+                color: white;
+                background-color: rgba(0,0,0,0);
+
+                font-weight: 400;
+                font-size: 18px;
+
+                @apply(--layout-horizontal);
+                @apply(--layout-center-center);
+            }
+
+            .no-show {
+                color: #F44336;
+            }
+            .headerTitle {
+                color: white;
+                padding-right: 15px;
+                -webkit-margin-before: 0.83em;
+                -webkit-margin-after: 0.83em;
+                -webkit-margin-start: 0px;
+                -webkit-margin-end: 0px;
+                padding-top: 0;
+                margin: 0;
+                font-weight: 300;
+                font-size: 24px;
+                font-family: "Roboto", sans-serif;
+            }
+            app-header {
+                color: #fff;
+            }
         </style>
         <app-location route="{{route}}"></app-location>
         <app-route
@@ -115,6 +190,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 pattern="/:page"
                 data="{{routeData}}"
                 tail="{{subroute}}"></app-route>
+
         <firebase-app api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI"
                       name="primary"
                       auth-domain="amoms-9ecf6.firebaseapp.com"
@@ -128,15 +204,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                            data="{{appointmentPatient}}"></firebase-document>
         <firebase-document id="pracApp" app-name="primary" path="/users/{{pracKey}}"
                            data="{{appointmentPrac}}"></firebase-document>
+        <firebase-document id="appDetail" app-name="primary" path="/appointments/{{appKey}}"
+                           data="{{appDetail}}"></firebase-document>
+        <firebase-query id="grabApps" app-name="primary" path="/appointments" data="{{appointments}}"></firebase-query>
+
+        <poly-filter
+                array-to-filter="[[appointments]]"
+                filter="[[formatEventDate]]"
+                filtered-array="{{appointmentsByDate}}"
+                filter-by="eventDate">
+        </poly-filter>
+
+        <iron-media-query query="(max-width: 1024px)" query-matches="{{smallScreen}}"></iron-media-query>
+
         <app-drawer-layout fullbleed force-narrow>
             <!-- Drawer content -->
-            <app-drawer>
+            <app-drawer hidden$="[[!smallScreen]]">
                 <app-toolbar>Menu</app-toolbar>
                 <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
                     <div hidden$="[[user]]" name="login">
                         <a name="login" href="/login" drawer-toggle>Login</a>
                     </div>
-                    <div hidden$="[[!user]]" name="schedule">
+                    <div hidden$="[[!user]]" name="agenda">
                         <a href="/agenda/schedule" drawer-toggle>Schedule</a>
                     </div>
                     <div hidden$="[[!_computeSecretaryView(filteredUser.role)]]" name="patient">
@@ -157,8 +246,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
                 <app-header condenses reveals effects="waterfall">
                     <app-toolbar>
-                        <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
-                        <div main-title>AMOMS</div>
+                        <paper-icon-button hidden$="[[!smallScreen]]" icon="menu" drawer-toggle></paper-icon-button>
+                        <h2 class="headerTitle">3MS - Modern Medical Management System</h2>
+                        <paper-tabs hidden$="[[smallScreen]]" selected="[[page]]" attr-for-selected="name" role="navigation">
+                            <paper-tab hidden$="[[user]]" name="login">
+                                <a href="/login">Login</a>
+                            </paper-tab>
+                            <paper-tab hidden$="[[!user]]" name="agenda">
+                                <a href="/agenda/schedule">Schedule</a>
+                            </paper-tab>
+                            <paper-tab hidden$="[[!_computeSecretaryView(userRole)]]" name="patient">
+                                <a href="/patient">Patient</a>
+                            </paper-tab>
+                            <paper-tab hidden$="[[!_computeAdminView(userRole)]]" name="users">
+                                <a href="/users">Admin</a>
+                            </paper-tab>
+                        </paper-tabs>
+                        <div main-title></div>
                         <div hidden$="[[!user]]">
                             <logout-account></logout-account>
                         </div>
@@ -168,10 +272,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="view404" role="main">
                     <login-page name="login"></login-page>
                     <schedule-page hidden$="[[!user]]" route="[[subroute]]" name="agenda"></schedule-page>
-                    <patient-page hidden$="[[!_computeSecretaryView(filteredUser.role)]]" name="patient"
+                    <patient-page hidden$="[[!_computeSecretaryView(userRole)]]" name="patient"
                                   user="[[user]]" admin="Administrator" secretary="Secretary"
                                   practitioner="Practitioner" error-message="{{errorMessage}}"></patient-page>
-                    <users-admin hidden$="[[!_computeAdminView(filteredUser.role)]]" name="users"></users-admin>
+                    <users-admin hidden$="[[!_computeAdminView(userRole)]]" name="users"></users-admin>
                     <!--<prescription-page name="prescription"></prescription-page>-->
                     <my-view404 name="view404"></my-view404>
                 </iron-pages>
@@ -192,26 +296,106 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <div class="horizontal-center">
                     <h2 class="appTitle">[[appDetail.title]]</h2>
                 </div>
-                <div class="horizontal-layout">
+                <div hidden$="[[edit]]" class="horizontal-justified">
                     <div class="left-form">
-                        <p><b>Description: &nbsp</b>[[appDetail.description]]</p>
-                        <p><b>Patient: &nbsp</b>[[appointmentPatient.fullName]]</p>
-                        <p><b>Practitioner: &nbsp</b>[[appointmentPrac.firstName]] [[appointmentPrac.lastName]]</p>
-                        <p><b>Status: </b><span class="appStatus">[[appDetail.status]]</span></p>
+                        <paper-item><b>Patient: &nbsp</b>[[appointmentPatient.fullName]]</paper-item>
+                        <paper-item><b>Practitioner: &nbsp</b>[[appointmentPrac.firstName]] [[appointmentPrac.lastName]]
+                        </paper-item>
+                        <paper-item><b>Description: &nbsp</b>[[appDetail.description]]</paper-item>
+                        <paper-item><b>Status: &nbsp</b><span class="appStatus">[[appDetail.status]]</span></paper-item>
                     </div>
                     <div>
-                        <p><b>Date: &nbsp</b>[[appDetail.eventDate]]</p>
-                        <p><b>Start: &nbsp</b>[[appStart]]</p>
-                        <p><b>End: &nbsp</b>[[appEnd]]</p>
+                        <paper-item><b>Date: &nbsp</b>[[humanDate]]</paper-item>
+                        <paper-item><b>Start: &nbsp</b>[[editStartTime]]</paper-item>
+                        <paper-item><b>End: &nbsp</b>[[editEndTime]]</paper-item>
+                    </div>
+                </div>
+                <div hidden$="[[!edit]]" class="horizontal-justified">
+                    <div class="left-form">
+                        <vaadin-combo-box items="[[onlyPractitioners]]" id="editPractitionerItem" label="Practitioner"
+                                          item-value-path="$key" value="{{appDetail.practitioner}}"
+                                          item-label-path="lastName">
+                            <template>
+                                <paper-item>
+                                    <div>[[item.firstName]] [[item.lastName]]</div>
+                                </paper-item>
+                            </template>
+                        </vaadin-combo-box>
+                        <vaadin-combo-box items="[[patients]]" id="editPatientItem" label="Patient"
+                                          item-value-path="$key"
+                                          item-label-path="firstName" value="{{appDetail.patient}}">
+                            <template>
+                                <paper-body two-line>
+                                    <div>[[item.fullName]]</div>
+                                    <div secondary>[[item.email]]</div>
+                                </paper-body>
+                            </template>
+                        </vaadin-combo-box>
+                        <paper-input id="eventDescription" required placeholder="Description"
+                                     value="{{appDetail.description::input}}"></paper-input>
+                    </div>
+                    <div>
+                        <paper-input name="editDatePickerDialog" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})"
+                                     id="editEventDatePicker" label="Event Date" value="[[formatEventDate]]"
+                                     on-tap="openDialog" placeholder="YYYY-MM-DD" required auto-validate></paper-input>
+                        <paper-input id="editStartTimeInput" label="Start Time" required on-tap="openDialog"
+                                     name="editStartTimeDialog" auto-validate value="[[editStartTime]]"></paper-input>
+                        <paper-input id="editEndTimeInput" label="End Time" required on-tap="openDialog"
+                                     name="editEndTimeDialog" value="[[editEndTime]]" auto-validate></paper-input>
                     </div>
                 </div>
             </div>
+            <div hidden$="[[!edit]]" class="horizontal-justified app-status-buttons">
+                <div class="horizontal-center">Set Appointment Status:</div>
+                <div class="status-buttons">
+                    <paper-button on-tap="noShow" class="no-show">No Show</paper-button>
+                    <paper-button on-tap="areYouSure" class="cancel-button">Cancel</paper-button>
+                </div>
+            </div>
+            <div class="buttons" hidden$="[[edit]]">
+                <paper-button dialog-dismiss>Dismiss</paper-button>
+                <paper-button hidden$="[[!_computeEditButtonView(userRole, appDetail.status)]]"
+                              on-tap="editApp">
+                    Edit
+                </paper-button>
+                <paper-button hidden$="[[!_computeCheckInButtonView(userRole, appDetail.status)]]" auto-focus
+                              on-tap="checkIn">Check In
+                </paper-button>
+                <paper-button hidden$="[[!_computePractitionerView(userRole)]]" on-tap="viewApp">View
+                </paper-button>
+            </div>
+            <div class="buttons" hidden$="[[!edit]]">
+                <paper-button on-tap="returnApp">Cancel</paper-button>
+                <paper-button on-tap="saveApp">Save</paper-button>
+            </div>
+        </paper-dialog>
 
+        <paper-dialog id="areYouSure" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+            <h2>Are You Sure?</h2>
+            <p>This will delete the appointment permanently.</p>
+            <div class="buttons">
+                <paper-button dialog-dismiss auto-focus>Nevermind</paper-button>
+                <paper-button on-tap="cancelApp" dialog-dismiss class="cancel-button">Remove</paper-button>
+            </div>
+        </paper-dialog>
+
+        <!--Date & Time Pickers-->
+        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="editDatePickerDialog"
+                               date="{{editEventDate}}"></app-datepicker-dialog>
+        <paper-dialog id="editStartTimeDialog" class="paper-time-picker-dialog"
+                      on-iron-overlay-closed="dismissDialog">
+            <paper-time-picker id="editStartTimePicker" hour="0-24" time="{{editStartTime}}"></paper-time-picker>
             <div class="buttons">
                 <paper-button dialog-dismiss>Cancel</paper-button>
-                <paper-button hidden$="[[!_computeSecretaryView(filteredUser.role)" on-tap="editApp">Edit</paper-button>
-                <paper-button hidden$="[[!_computePractitionerView(filteredUser.role)]]" on-tap="viewApp">View
-                </paper-button>
+                <paper-button dialog-confirm>OK</paper-button>
+            </div>
+        </paper-dialog>
+        <paper-dialog id="editEndTimeDialog" class="paper-time-picker-dialog"
+                      on-iron-overlay-closed="dismissDialog">
+            <paper-time-picker id="editEndTimePicker" hour="0-24" time="{{editEndTime}}"></paper-time-picker>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm>OK</paper-button>
             </div>
         </paper-dialog>
 
@@ -245,7 +429,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     value: null
                 },
                 toastMessage: String,
-                appDetail: Object
+                appDetail: Object,
+                edit: {
+                    type: Boolean,
+                    value: false
+                },
+                humanDate: String,
+                editStartTime: {
+                    type: String
+                },
+                editEndTime: {
+                    type: String
+                },
+                editEventDate: {
+                    type: String,
+                    observer: '_formatEventDate'
+                },
+                userRole: {
+                    type: String,
+                    value: null
+                }
             },
 
             listeners: {
@@ -253,8 +456,64 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             observers: [
-                '_routePageChanged(routeData.page)'
+                '_routePageChanged(routeData.page)',
+                '_updatePractitionerKey(appDetail.practitioner)',
+                '_updatePatientKey(appDetail.patient)',
+                '_humanizeDate(appDetail.eventDate)',
+                '_formatTimes(appDetail.startTime, appDetail.endTime)',
+                '_changeRole(filteredUser.role)'
             ],
+
+            _updatePractitionerKey: function (key) {
+                this.pracKey = key;
+            },
+
+            _updatePatientKey: function (key) {
+                this.patientKey = key;
+            },
+
+            _changeRole: function (role) {
+                this.userRole = role;
+            },
+
+            _computeEditButtonView: function (role, status) {
+                if (status == "Completed" || status == "In Progress")
+                    return false
+                else if (role == "Secretary" || role == "Administrator")
+                    return true
+                else
+                    return false
+            },
+
+            _computeCheckInButtonView: function (role, status) {
+                if (status == "Ready" || status == "Completed" || status == "In Progress")
+                    return false
+                else if (role == "Secretary" || role == "Administrator")
+                    return true
+                else
+                    return false
+            },
+
+            openDialog: function (e) {
+                if (e.target.getAttribute('data-arg'))
+                    this.$[e.target.getAttribute('data-arg')].open();
+                else
+                    this.$[e.target.getAttribute('name')].open();
+            },
+
+            _formatTimes: function (start, end) {
+                this.editStartTime = moment(start, ['HH:mm']).format('h:mm A');
+                this.editEndTime = moment(end, ['HH:mm']).format('h:mm A')
+            },
+
+            _humanizeDate: function (date) {
+                this.humanDate = moment(date).format('dddd, MMMM Do YYYY');
+                this.formatEventDate = date
+            },
+
+            _formatEventDate: function () {
+                this.formatEventDate = this.editEventDate.replace(/\//g, '-');
+            },
 
             _computeSecretaryView: function (role) {
                 if (role == "Secretary" || role == "Administrator")
@@ -309,21 +568,125 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             openAppDialog: function (e) {
-                this.appDetail = e.detail.calEvent;
+                this.appKey = e.detail.calEvent.$key;
+//                this.appDetail = e.detail.calEvent;
                 this.pracKey = e.detail.calEvent.practitioner
                 this.patientKey = e.detail.calEvent.patient
-                this.appStart = moment(e.detail.calEvent.startTime, ['HH:mm']).format('h:mm A')
-                this.appEnd = moment(e.detail.calEvent.endTime, ['HH:mm']).format('h:mm A')
+                this.onlyPractitioners = e.detail.practitioners
+                this.patients = e.detail.patients
 
                 this.$.viewAppDialog.open();
             },
 
             viewApp: function () {
                 this.$.viewAppDialog.close();
-                window.history.pushState({}, null, '/agenda/appointment/' + this.appDetail.$key);
+                window.history.pushState({}, null, '/agenda/appointment/' + this.appKey);
                 window.dispatchEvent(new CustomEvent('location-changed'));
+            },
+            editApp: function () {
+                this.edit = true;
+                this.$.viewAppDialog.center();
+            },
+            areYouSure: function () {
+                this.$.areYouSure.open();
+            },
+            checkIn: function () {
+                this.set('appDetail.backgroundColor', '#00E676')
+                this.set('appDetail.status', 'Ready')
+                document.querySelector('schedule-page').fire('updateAgenda')
+            },
+            cancelApp: function () {
+                this.$.appDetail.destroy()
+                this.$.viewAppDialog.close();
+            },
+            noShow: function () {
+                this.set('appDetail.backgroundColor', '#F44336')
+                this.set('appDetail.textColor', 'white')
+                this.set('appDetail.status', 'No Show')
+                document.querySelector('schedule-page').fire('updateAgenda')
+            },
+            saveApp: function () {
+                if (this._validateEvent()) {
+                    var startTime = moment(this.editStartTime, ["h:mm A"]).format('HH:mm');
+                    var endTime = moment(this.editEndTime, ["h:mm A"]).format('HH:mm')
+                    this.set('appDetail.start', this.formatEventDate + "T" + startTime)
+                    this.set('appDetail.end', this.formatEventDate + "T" + endTime)
+                    this.set('appDetail.eventDate', this.formatEventDate)
+                    this.set('appDetail.startTime', startTime)
+                    this.set('appDetail.endTime', endTime)
+                    document.querySelector('schedule-page').fire('updateAgenda')
+                    this.edit = false;
+                    this.$.viewAppDialog.center();
+                }
+                //some toast message
+            },
+            _validateEvent: function () {
+                var weekDate = moment(this.formatEventDate).weekday()
+                var start = moment(this.editStartTime, ["h:mm A"])
+                var end = moment(this.editEndTime, ["h:mm A"])
+                if (!(moment(this.formatEventDate).isSameOrAfter(moment(moment().format('YYYY-MM-DD'))))) {
+                    this.$.editEventDatePicker.errorMessage = "Please choose a date before today"
+                    this.$.editEventDatePicker.invalid = true;
+                    return false
+                }
+                if (weekDate == 0 || weekDate == 6) {
+                    this.$.editEventDatePicker.errorMessage = "We are open Monday through Friday"
+                    this.$.editEventDatePicker.invalid = true;
+                    return false
+                }
+                if (start.isAfter(end)) {
+                    this.$.editStartTimeInput.errorMessage = "Start time is after end time"
+                    this.$.editStartTimeInput.invalid = true;
+                    return false
+                }
+                var appLength = start;
+                var halfHour = moment.duration(30, 'm');
+                if (end.isBefore(appLength.add(halfHour))) {
+                    this.$.editStartTimeInput.errorMessage = "Appointment must be longer";
+                    this.$.editEndTimeInput.errorMessage = "Appointment must be longer"
+                    this.$.editEndTimeInput.invalid = true;
+                    this.$.editStartTimeInput.invalid = true;
+                }
+                if (start.isBefore(moment("8:00", ["HH:mm"])) || end.isAfter(moment("18:00", ["HH:mm"]))) {
+                    this.$.editStartTimeInput.errorMessage = "Business hours are from 8AM to 56M";
+                    this.$.editEndTimeInput.errorMessage = "Business hours are from 8AM to 6PM"
+                    this.$.editEndTimeInput.invalid = true;
+                    this.$.editStartTimeInput.invalid = true;
+                    return false
+                }
+                if (this.appointmentsByDate.length != 0) {
+                    var appDate = this.appointmentsByDate;
+                    for (var i = 0; i < appDate.length; i++) {
+                        if (appDate[i].$key == this.appKey) {
+                            continue
+                        }
+                        if (appDate[i].practitioner == this.$.editPractitionerItem.selectedItem.$key) {
+                            var appStart = moment(appDate[i].startTime, ["HH:mm"])
+                            var appEnd = moment(appDate[i].endTime, ["HH:mm"])
+                            if (start.isBetween(appStart, appEnd, null, '[)') || end.isBetween(appStart, appEnd, null, '(]')) {
+                                this.$.startTimeInput.errorMessage = "Time conflict with another appointment";
+                                this.$.endTimeInput.errorMessage = "Time conflict with another appointment"
+                                this.$.endTimeInput.invalid = true;
+                                this.$.startTimeInput.invalid = true;
+                                return false
+                            }
+                        }
+                    }
+                }
+                return true
+            },
+            returnApp: function () {
+                this.edit = false;
+                this.$.viewAppDialog.center();
             }
         })
+
+        //        cancel: delete
+        //        noshow: red
+        //        upcoming: yellow
+        //        in-progress: orange
+        //        ready: green
+        //        completed: blue
 
     </script>
 

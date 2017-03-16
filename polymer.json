@@ -2,17 +2,23 @@
   "entrypoint": "index.html",
   "shell": "src/my-app.html",
   "fragments": [
-    "src/login-page.html",
-    "src/my-view2.html",
-    "src/my-view3.html",
+    "src/login.html",
+    "src/agenda.html",
+    "src/appointment-page.html",
+    "src/credentials.html",
+    "src/patient.html",
+    "src/users.html",
+    "src/prescription.html",
+    "src/logout.html",
     "src/my-view404.html"
   ],
-  "sourceGlobs": [
+  "sources": [
    "src/**/*",
    "images/**/*",
    "bower.json"
   ],
   "includeDependencies": [
-    "bower_components/webcomponentsjs/webcomponents-lite.min.js"
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js",
+    "extra-files/**/*"
   ]
 }

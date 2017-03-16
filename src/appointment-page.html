@@ -34,25 +34,6 @@
                 text-transform: uppercase;
             }
         </style>
-        <firebase-app api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI"
-                      name="secondary"
-                      auth-domain="amoms-9ecf6.firebaseapp.com"
-                      database-url="https://amoms-9ecf6.firebaseio.com"
-                      storage-bucket="amoms-9ecf6.appspot.com"></firebase-app>
-        <firebase-auth id="appointmentStatus" app-name="secondary" status="{{tempStatus}}" provider="google"
-                       on-error="showError"></firebase-auth>
-        <firebase-query
-                id="queryAppointment"
-                app-name="primary"
-                path="/schedule/appointment/{uid}"
-                data="{{dataQuery}}"></firebase-query>
-        <firebase-document
-                id="saveAppointmentStatus"
-                app-name="primary"
-                path="/schedule/appointment/{uid}"
-                data="{{appointmentData}}"></firebase-document>
-        <firebase-auth id="primaryAuth" app-name="primary" status="{{status}}" provider="google"
-                       on-error="showError"></firebase-auth>
         <paper-dialog id="editAppointmentStatus"
                       no-cancel-on-outside-click
                       class=""
