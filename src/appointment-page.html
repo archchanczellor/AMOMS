@@ -3,6 +3,7 @@
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/dialog-el/dialog-el.html">
 <link rel="import" href="prescription.html">
 <link rel="import" href="../bower_components/paper-input/paper-textarea.html">
 <dom-module id="appointment-page">
@@ -92,14 +93,20 @@
             #addAppPatientNotes {
                 min-width: 30vw;
             }
+
             .fixed-back {
                 position: fixed;
                 left: 20px;
                 top: 84px;
                 color: black;
             }
+
             .arrow-back {
                 color: black
+            }
+
+            .add-prescription-dialog {
+                width: 30vw;
             }
         </style>
         <iron-location path="{{path}}" hash="{{hash}}" query="{{query}}" dwell-time="{{dwellTime}}"></iron-location>
@@ -112,7 +119,7 @@
                            data="{{appPatient}}"></firebase-document>
         <firebase-document id="practitionerAppointment" app-name="primary" path="/users/{{appDetail.practitioner}}"
                            data="{{appPrac}}"></firebase-document>
-        <firebase-query id="appPatientNotes" app-name="primary" path="/notes/{{appDetail.patient}}"
+        <firebase-query id="appPatientNotes" app-name="primary" path="{{appDetailPath}}"
                         data="{{appNotes}}"></firebase-query>
         <firebase-query id="appPatientPrescriptions" app-name="primary" path="/prescriptions/{{appDetail.patient}}"
                         data="{{patientPrescriptions}}"></firebase-query>
@@ -131,10 +138,12 @@
                 <p>Practitioner: &nbsp;[[appPrac.firstName]] [[appPrac.lastName]]</p>
                 <div class="horizontal-justified">
                     <p>Status: &nbsp;[[appDetail.status]]</p>
-                    <paper-button class="start-appointment" raised hidden$="[[_computeStart(statusChange)]]" on-tap="startApp">Start
+                    <paper-button class="start-appointment" raised hidden$="[[_computeStart(statusChange)]]"
+                                  on-tap="startApp">Start
                         Appointment
                     </paper-button>
-                    <paper-button class="end-appointment" raised hidden$="[[_computeEnd(statusChange)]]" on-tap="endApp">End Appointment
+                    <paper-button class="end-appointment" raised hidden$="[[_computeEnd(statusChange)]]"
+                                  on-tap="endApp">End Appointment
                     </paper-button>
                 </div>
                 <p></p>
@@ -146,7 +155,7 @@
                     <h2 class="pageTitle">Notes</h2>
                     <div class="buttons">
                         <paper-button raised class="edit-patient-button" on-tap="_viewEditableNoteDialog"
-                                      hidden$="[[!editNoteKey]]">View Note
+                                      hidden$="[[!selectedNote]]">View Note
                         </paper-button>
                         <paper-button raised class="add-patient-button" on-tap="_openNoteDialog">Add Note</paper-button>
                     </div>
@@ -183,8 +192,9 @@
                 <div class="horizontal-justified">
                     <h2 class="pageTitle">Prescriptions</h2>
                     <div class="buttons">
-                        <paper-button class="edit-prescription" hidden>Edit</paper-button>
-                        <paper-button class="start-appointment" raised>Add Prescription</paper-button>
+                        <paper-button class="edit-prescription" hidden$="[[!selectedPrescription]]">Edit</paper-button>
+                        <paper-button class="start-appointment" on-tap="_addPrescription" raised>Add Prescription
+                        </paper-button>
                     </div>
                 </div>
                 <vaadin-grid visible-rows="5" id="appPrescriptionGrid">
@@ -250,6 +260,33 @@
                 <paper-button on-tap="_saveAppNote">Save</paper-button>
             </div>
         </paper-dialog>
+        <paper-dialog id="addPrescriptionDialog" class="add-prescription-dialog">
+            <prescription-page user="[[user]]" patient="[[appDetail.patient]]"></prescription-page>
+        </paper-dialog>
+        <paper-dialog id="editNoteDialogApp" class="fixed-dialog-width">
+            <div hidden$="[[editing]]">
+                <h4>View Note on [[editableNote.date]]</h4>
+                <p>[[editableNote.note]]</p>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Dismiss</paper-button>
+                    <paper-button on-tap="_editNote">Edit</paper-button>
+                </div>
+            </div>
+            <div hidden$="[[!editing]]">
+                <h4>Edit Note on [[editNote.date]]</h4>
+                <paper-textarea id="newNoteAppInput"
+                                autofocus
+                                value="{{editNote.note::input}}"
+                                maxlength="500"
+                                rows="1"
+                                max-rows="5"
+                                char-counter></paper-textarea>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Cancel</paper-button>
+                    <paper-button on-tap="_saveNote">Save</paper-button>
+                </div>
+            </div>
+        </paper-dialog>
         <paper-toast id="appointmentToast" text="{{toastMessage}}"></paper-toast>
     </template>
 
@@ -285,19 +322,72 @@
                 statusChange: {
                     type: String,
                     value: null
+                },
+                editPrescriptionKey: {
+                    type: String,
+                    value: null
+                },
+                selectedNote: {
+                    type: Object,
+                    value: null
+                },
+                testAppNotes: {
+                    type: Array,
+                    value: null
+                },
+                editing: {
+                    type: Boolean,
+                    value: false
+                },
+                editNote: Object,
+                appDetail: {
+                    type: Object,
+                    value: null
+                },
+                appDetailPath: {
+                    type: String,
+                    value: null
+                },
+                query: {
+                    type: String,
+                    observer: '_setNotesPath'
                 }
             },
+
+            listeners: {
+                'refreshNotes': 'updateNotesList'
+            },
+
             observers: [
                 '_formatTitle(appDetail.title)',
-                '_statusChange(appDetail.status)'
+                '_statusChange(appDetail.status)',
+                '_dirtyCheckNotes(appNotes.splices)',
+                '_setNotesPath(appDetail.patient)'
+
             ],
+
+            attached: function () {
+                console.log('test')
+            },
+
+            _setNotesPath: function (key) {
+                this.async(function () {
+                    this.appDetailPath = null
+                    this.appDetailPath = '/notes/' + key
+                }, 1000)
+            },
+
+            _dirtyCheckNotes: function (notes) {
+                this.testAppNotes = []
+                this.testAppNotes = this.appNotes
+            },
             _formatTitle: function (title) {
                 if (title) {
                     var temp = title.split("-")
                     this.appTitle = temp[0];
                 }
             },
-            _statusChange: function(status) {
+            _statusChange: function (status) {
                 this.statusChange = status
             },
             _computeSelected: function (status) {
@@ -342,17 +432,26 @@
             },
             ready: function () {
                 this.async(function () {
-                    var noteGrid = document.querySelector('#appNotesGrid')
+                    var noteGrid = document.querySelector('#appNotesGrid'),
+                        prescriptionGrid = document.querySelector('#appPrescriptionGrid'),
+                        notePage = document.querySelector('appointment-page')
                     noteGrid.addEventListener('selected-items-changed', function () {
                         this.selection.selected(function (index) {
-                            var notePage = document.querySelector('appointment-page')
-                            notePage.editNoteKey = notePage.appNotes[index].$key;
+                            notePage.selectedNote = notePage.appNotes[index];
                         })
                     }.bind(noteGrid))
+                    prescriptionGrid.addEventListener('selected-items-changed', function () {
+                        this.selection.selected(function (index) {
+                            notePage.selectedPrescription = notePage.patientPrescriptions[index]
+                        })
+                    }.bind(prescriptionGrid))
                 }, 1000)
             },
             _viewEditableNoteDialog: function () {
-                this.$.editableNoteDialog.open()
+//                this.fire('viewNote', {editNoteKey: this.selectedNote.$key, editNotePatientKey: this.appDetail.patient})
+                this.editNoteKey = this.selectedNote.$key
+                this.editing = false
+                this.$.editNoteDialogApp.open()
             },
             _openNoteDialog: function () {
                 this.$.addAppPatientNotes.open()
@@ -366,10 +465,10 @@
                 this.$.saveNewNoteApp.data = tempData;
                 this.$.saveNewNoteApp.save('/notes/' + this.appDetail.patient + '/').then(function () {
                     document.querySelector('#addAppPatientNotes').close();
-//                    document.querySelector('#editNoteDoc').path = '/notes/';
+                    document.querySelector('#saveNewNoteApp').path = '/notes/';
                     document.querySelector('#newNoteAppInput').value = ''
-                    document.querySelector('appointment-page').toastMessage = "Note has been added!";
-                    document.querySelector('#appointmentToast').open();
+                    document.querySelector('my-app').toastMessage = "Note has been added!";
+                    document.querySelector('#mainToast').open();
                 }, function () {
                     document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
                     document.querySelector('#appointmentToast').open();
@@ -384,25 +483,55 @@
                 this.set('appDetail.backgroundColor', '#FF9800')
                 this.set('appDetail.textColor', 'black')
                 this.set('appDetail.status', "In-Progress")
-                if(document.querySelector('schedule-page'))
+                if (document.querySelector('schedule-page'))
                     document.querySelector('schedule-page').fire('updateAgenda')
             },
             endApp: function () {
                 this.set('appDetail.backgroundColor', '#2196F3')
                 this.set('appDetail.textColor', 'white')
                 this.set('appDetail.status', "Concluded")
-                if(document.querySelector('schedule-page'))
+                if (document.querySelector('schedule-page'))
                     document.querySelector('schedule-page').fire('updateAgenda')
             },
-            _computeStart: function(status) {
-                if(status == "In-Progress" || status == "Concluded")
+            _computeStart: function (status) {
+                if (status == "In-Progress" || status == "Concluded")
                     return true
                 return false
             },
-            _computeEnd: function(status) {
-                if(status == "In-Progress")
+            _computeEnd: function (status) {
+                if (status == "In-Progress")
                     return false
                 return true
+            },
+            _addPrescription: function () {
+                this.$.addPrescriptionDialog.open();
+            },
+            updateNotesList: function () {
+                this.async(function () {
+                    this.appDetailPath = null
+                    this.appDetailPath.path = '/notes/' + this.appDetail.patient
+                }, 1000)
+            },
+//            _updateNote: function (e) {
+//                this.editNoteKey = e.detail.editNoteKey
+//                this.editNotePatientKey = e.detail.editNotePatientKey
+//                this.$.editNoteDialogMain.open()
+//            },
+            _editNote: function () {
+                this.editNote = this.editableNote;
+                this.editing = true
+            },
+            _saveNote: function () {
+//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey + '/'
+                this.editableNote = {}
+                this.editableNote = this.editNote
+//                document.querySelector('appointment-page').fire('refreshNotes')
+                this.async(function () {
+                    this.$.appPatientNotes.path = null
+                    this.$.appPatientNotes.path = '/notes/' + this.appDetail.patient
+                }, 1000)
+                this.editing = false
+//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey
             }
         })
     </script>

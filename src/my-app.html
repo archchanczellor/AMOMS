@@ -29,6 +29,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/poly-filter/poly-filter.html">
 <link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/vaadin-date-picker/vaadin-date-picker.html">
 
 <script src="../bower_components/moment/moment.js"></script>
 
@@ -155,7 +156,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 text-transform: uppercase;
 
                 color: white;
-                background-color: rgba(0,0,0,0);
+                background-color: rgba(0, 0, 0, 0);
 
                 font-weight: 400;
                 font-size: 18px;
@@ -167,6 +168,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             .no-show {
                 color: #F44336;
             }
+
             .headerTitle {
                 color: white;
                 padding-right: 15px;
@@ -180,6 +182,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 font-size: 24px;
                 font-family: "Roboto", sans-serif;
             }
+
+            .fixed-dialog-width {
+                width: 35vw;
+            }
+
             app-header {
                 color: #fff;
             }
@@ -207,6 +214,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <firebase-document id="appDetail" app-name="primary" path="/appointments/{{appKey}}"
                            data="{{appDetail}}"></firebase-document>
         <firebase-query id="grabApps" app-name="primary" path="/appointments" data="{{appointments}}"></firebase-query>
+        <firebase-document id="editNoteDocumentMain" app-name="primary" data="{{viewNote}}"
+                           path="/notes/{{editNotePatientKey}}/{{editNoteKey}}"></firebase-document>
 
         <poly-filter
                 array-to-filter="[[appointments]]"
@@ -248,7 +257,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <app-toolbar>
                         <paper-icon-button hidden$="[[!smallScreen]]" icon="menu" drawer-toggle></paper-icon-button>
                         <h2 class="headerTitle">3MS - Modern Medical Management System</h2>
-                        <paper-tabs hidden$="[[smallScreen]]" selected="[[page]]" attr-for-selected="name" role="navigation">
+                        <paper-tabs hidden$="[[smallScreen]]" selected="[[page]]" attr-for-selected="name"
+                                    role="navigation">
                             <paper-tab hidden$="[[user]]" name="login">
                                 <a href="/login">Login</a>
                             </paper-tab>
@@ -299,10 +309,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <div hidden$="[[edit]]" class="horizontal-justified">
                     <div class="left-form">
                         <paper-item><b>Patient: &nbsp;</b>[[appointmentPatient.fullName]]</paper-item>
-                        <paper-item><b>Practitioner: &nbsp;</b>[[appointmentPrac.firstName]] [[appointmentPrac.lastName]]
+                        <paper-item><b>Practitioner: &nbsp;</b>[[appointmentPrac.firstName]]
+                            [[appointmentPrac.lastName]]
                         </paper-item>
                         <paper-item><b>Description: &nbsp;</b>[[appDetail.description]]</paper-item>
-                        <paper-item><b>Status: &nbsp;</b><span class="appStatus">[[appDetail.status]]</span></paper-item>
+                        <paper-item><b>Status: &nbsp;</b><span class="appStatus">[[appDetail.status]]</span>
+                        </paper-item>
                     </div>
                     <div>
                         <paper-item><b>Date: &nbsp;</b>[[humanDate]]</paper-item>
@@ -398,6 +410,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <paper-button dialog-confirm>OK</paper-button>
             </div>
         </paper-dialog>
+        <paper-dialog id="editNoteDialogMain" modal class="fixed-dialog-width">
+            <div hidden$="[[editing]]">
+                <h4>View Note on [[viewNote.date]]</h4>
+                <p>[[viewNote.note]]</p>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Dismiss</paper-button>
+                    <paper-button on-tap="_editNote">Edit</paper-button>
+                </div>
+            </div>
+            <div hidden$="[[!editing]]">
+                <h4>Edit Note on [[editNote.date]]</h4>
+                <paper-textarea id="newNoteAppInput"
+                                autofocus
+                                value="{{editNote.note::input}}"
+                                maxlength="500"
+                                rows="1"
+                                max-rows="5"
+                                char-counter></paper-textarea>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Cancel</paper-button>
+                    <paper-button on-tap="_saveNote">Save</paper-button>
+                </div>
+            </div>
+        </paper-dialog>
 
         <paper-toast id="mainToast" text="{{toastMessage}}"></paper-toast>
 
@@ -448,11 +484,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 userRole: {
                     type: String,
                     value: null
+                },
+                editNote: Object,
+                editing: {
+                    type: Boolean,
+                    value: false
                 }
             },
 
             listeners: {
-                'viewApp': 'openAppDialog'
+                'viewApp': 'openAppDialog',
+                'viewNote': '_updateNote'
             },
 
             observers: [
@@ -679,15 +721,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             returnApp: function () {
                 this.edit = false;
                 this.$.viewAppDialog.center();
+            },
+            _updateNote: function (e) {
+                this.editNoteKey = e.detail.editNoteKey
+                this.editNotePatientKey = e.detail.editNotePatientKey
+                this.$.editNoteDialogMain.open()
+            },
+            _editNote: function () {
+                this.editNote = this.viewNote;
+                this.editing = true
+            },
+            _saveNote: function () {
+//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey + '/'
+                this.viewNote = {}
+                this.viewNote = this.editNote
+                document.querySelector('appointment-page').fire('refreshNotes')
+                this.editing = false
+//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey
+
             }
         })
-
-        //        cancel: delete
-        //        noshow: red
-        //        upcoming: yellow
-        //        in-progress: orange
-        //        ready: green
-        //        completed: blue
 
     </script>
 

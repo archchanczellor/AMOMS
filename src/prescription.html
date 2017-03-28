@@ -47,19 +47,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 padding: 10px;
             }
 
-            .buttons {
-                background-color: #2196F3;
-                color: white;
-                left: 100px;
+            .button {
+                color: #2196F3;
             }
 
-            .prescription-submit {
-                padding: 25px;
+            .horizontal-end-justified {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
             }
         </style>
 
         <firebase-document
-                id="document"
+                id="prescriptionDoc"
+                app-name="primary"
                 path="/prescriptions/"
                 data="{{prescriptionData}}">
         </firebase-document>
@@ -67,7 +67,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <div class="horizontal-around">
             <div>
                 <div class="center">
-                    <paper-material class="prescription-submit" elevation="1">
+                    <!--<paper-material class="prescription-submit" elevation="1">-->
                         <form id="addPrescriptionForm">
                             <h2>Drug Prescription</h2>
                             <paper-input id="drugName" name="drugName" label="Drug Name" autofocus
@@ -77,10 +77,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             <paper-input id="drugDirections" name="drugDirections" label="Directions" autofocus
                                          required></paper-input>
                         </form>
-                    </paper-material>
-                    <div>
-                        <paper-button class="buttons" id="addPrescriptionButton" on-tap="addPrescription">Add
-                            Prescription
+                    <!--</paper-material>-->
+                    <div class="horizontal-end-justified">
+                        <paper-button dialog-dismiss>Cancel</paper-button>
+                        <paper-button class="button" autofocus id="addPrescriptionButton" on-tap="addPrescription">
+                            Save
                         </paper-button>
                     </div>
                 </div>
@@ -89,11 +90,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </div>
         <paper-toast id="prescriptionToast" text="{{toastMessage}}"></paper-toast>
     </template>
-
-    <script>
-
-
-    </script>
 
     <script>
 
@@ -106,21 +102,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: Object,
                     value: null
                 },
-                patientKey: String
+                patient: String,
+                user: Object
             },
 
             addPrescription: function () {
                 var data = $("#addPrescriptionForm :input").serializeObject();
-                var key = this.patientKey
-                this.$.document.data = data;
-                this.$.document.save('/prescriptions/', key).then(function () {
-                    document.querySelector('prescription-page').toastMessage = "Prescription has been added!";
-                    document.querySelector('#prescriptionToast').open();
-                }, function () {
-                    document.querySelector('prescription-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#prescriptionToast').open();
-                });
-            }
+                data.practitioner = this.user.email;
+                data.date = this._getTodaysDate();
+                this.$.prescriptionDoc.data = data;
+                if (this.patient) {
+                    this.$.prescriptionDoc.save('/prescriptions/' + this.patient + '/').then(function () {
+                        document.querySelector('my-app').toastMessage = "Prescription has been added!";
+                        document.querySelector('#addPrescriptionDialog').close();
+                        document.querySelector('#prescriptionDoc').path = '/prescriptions/';
+                        document.querySelector('#drugName').value = ''
+                        document.querySelector('#drugAmount').value = ''
+                        document.querySelector('#drugDirections').value = ''
+                        document.querySelector('#mainToast').open();
+                    }, function () {
+                        document.querySelector('my-app').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                        document.querySelector('#mainToast').open();
+                    });
+                }
+            },
+            _getTodaysDate: function () {
+                var today = new Date();
+                return today.toLocaleString()
+            },
         })
 
     </script>
