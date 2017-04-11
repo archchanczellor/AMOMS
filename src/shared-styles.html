@@ -53,6 +53,90 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         font-family: Roboto;
         text-align: center;
       }
+      .material {
+
+        border: none;
+
+        font-family: Roboto, sans-serif;
+        --divider-color: rgba(0, 0, 0, var(--dark-divider-opacity));
+
+        --vaadin-grid-cell: {
+          padding: 0;
+        };
+
+        --vaadin-grid-header-cell: {
+          height: 64px;
+          color: rgba(0, 0, 0, var(--dark-secondary-opacity));
+          font-size: 12px;
+        };
+
+        --vaadin-grid-body-cell: {
+          height: 48px;
+          color: rgba(0, 0, 0, var(--dark-primary-opacity));
+          font-size: 13px;
+        };
+
+        --vaadin-grid-body-row-hover-cell: {
+          background-color: #EEEEEE;
+        };
+
+        --vaadin-grid-body-row-selected-cell: {
+          background-color: #F5F5F5;
+        };
+
+        --vaadin-grid-focused-cell: {
+          box-shadow: none;
+          font-weight: bold;
+        };
+      }
+
+      .material .cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-right: 56px;
+      }
+
+      .material .cell.last {
+        padding-right: 24px;
+      }
+
+      .material .cell.numeric {
+        text-align: right;
+      }
+
+      .material paper-checkbox {
+        --primary-color: #3F51B5;
+        margin: 0 24px;
+      }
+
+      .material vaadin-grid-sorter {
+        --vaadin-grid-sorter-arrow: {
+          display: none !important;
+        };
+      }
+
+      .material vaadin-grid-sorter .cell {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .material vaadin-grid-sorter iron-icon {
+        transform: scale(0.8);
+      }
+
+      .material vaadin-grid-sorter:not([direction]) iron-icon {
+        color: rgba(0, 0, 0, var(--dark-disabled-opacity));
+      }
+
+      .material vaadin-grid-sorter[direction] {
+        color: rgba(0, 0, 0, var(--dark-primary-opacity));
+      }
+
+      .material vaadin-grid-sorter[direction=desc] iron-icon {
+        transform: scale(0.8) rotate(180deg);
+      }
     </style>
   </template>
 </dom-module>

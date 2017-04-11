@@ -1,10 +1,10 @@
 <link rel="import" href="../bower_components/iron-location/iron-location.html">
-<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/dialog-el/dialog-el.html">
 <link rel="import" href="prescription.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../bower_components/paper-input/paper-textarea.html">
 <dom-module id="appointment-page">
 
@@ -160,30 +160,28 @@
                         <paper-button raised class="add-patient-button" on-tap="_openNoteDialog">Add Note</paper-button>
                     </div>
                 </div>
-                <vaadin-grid visible-rows="5" id="appNotesGrid">
-                    <table>
-                        <colgroup>
-                            <col max-width="200">
-                            <col max-width="250">
-                            <col flex="1" max-width="1362">
-                        </colgroup>
-                        <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Added By</th>
-                            <th>Note</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <template is="dom-repeat" items="{{appNotes}}">
-                            <tr>
-                                <td>[[item.date]]</td>
-                                <td>[[item.creator]]</td>
-                                <td>[[item.note]]</td>
-                            </tr>
+                <vaadin-grid aria-label="Notes" class="material" id="notesGrid" items="[[appNotes]]" active-item="{{noteItem}}" size="200">
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
                         </template>
-                        </tbody>
-                    </table>
+                        <template>[[item.date]]</template>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="creator">Added By</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.creator]]</template>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column>
+                        <template class="header">Note</template>
+                        <template>
+                            <p style="white-space: normal">[[item.note]]</p>
+                        </template>
+                    </vaadin-grid-column>
+
                 </vaadin-grid>
             </paper-material>
         </div>
@@ -197,50 +195,34 @@
                         </paper-button>
                     </div>
                 </div>
-                <vaadin-grid visible-rows="5" id="appPrescriptionGrid">
-                    <table>
-                        <colgroup>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                        </colgroup>
-                        <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Prescribed By</th>
-                            <th>Prescribed Drug</th>
-                            <th>Prescribed Amount</th>
-                            <th>Directions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <template is="dom-repeat" items="{{patientPrescriptions}}">
-                            <tr>
-                                <td>[[item.date]]</td>
-                                <td>[[item.practitioner]]</td>
-                                <td>[[item.drugName]]</td>
-                                <td>[[item.drugAmount]]</td>
-                                <td>[[item.drugDirections]]</td>
-                            </tr>
+                <vaadin-grid id="prescriptionGrid" aria-label="Prescriptions" class="material" items="[[patientPrescriptions]]" active-item="{{prescriptionItem}}" size="200">
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
                         </template>
-                        </tbody>
-                    </table>
+                        <template>[[item.date]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="practitioner">Prescribed By</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.practitioner]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column>
+                        <template class="header">Prescribed Drug</template>
+                        <template>[[item.drugName]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column>
+                        <template class="header">Prescribed Amount</template>
+                        <template>[[item.drugAmount]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column>
+                        <template class="header">Directions</template>
+                        <template>[[item.drugDirections]]</template>
+                    </vaadin-grid-column>
                 </vaadin-grid>
             </paper-material>
         </div>
-        <!--view note-->
-        <paper-dialog id="editableNoteDialog" no-cancel-on-outside-click entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-            <h2>Note on [[editableNote.date]]</h2>
-            <p>Created by [[editableNote.creator]]</p>
-            <p>[[editableNote.note]]</p>
-            <div class="buttons">
-                <paper-button dialog-dismiss>Close</paper-button>
-                <!--<paper-button dialog-confirm>Submit</paper-button>-->
-            </div>
-        </paper-dialog>
         <!--add note-->
         <paper-dialog id="addAppPatientNotes" no-cancel-on-outside-click entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
@@ -274,13 +256,8 @@
             </div>
             <div hidden$="[[!editing]]">
                 <h4>Edit Note on [[editNote.date]]</h4>
-                <paper-textarea id="newNoteAppInput"
-                                autofocus
-                                value="{{editNote.note::input}}"
-                                maxlength="500"
-                                rows="1"
-                                max-rows="5"
-                                char-counter></paper-textarea>
+                <paper-textarea id="newNoteAppInput" autofocus value="{{editNote.note::input}}" rows="1"
+                                maxlength="500" max-rows="5" char-counter ></paper-textarea>
                 <div class="buttons">
                     <paper-button dialog-dismiss>Cancel</paper-button>
                     <paper-button on-tap="_saveNote">Save</paper-button>
@@ -331,6 +308,10 @@
                     type: Object,
                     value: null
                 },
+                selectedPrescription: {
+                    type: Object,
+                    value: null
+                },
                 testAppNotes: {
                     type: Array,
                     value: null
@@ -351,7 +332,14 @@
                 query: {
                     type: String,
                     observer: '_setNotesPath'
+                },
+                noteItem: {
+                    observer: '_noteItemChanged'
+                },
+                prescriptionItem: {
+                    observer: '_prescriptionItemChanged'
                 }
+
             },
 
             listeners: {
@@ -361,26 +349,27 @@
             observers: [
                 '_formatTitle(appDetail.title)',
                 '_statusChange(appDetail.status)',
-                '_dirtyCheckNotes(appNotes.splices)',
                 '_setNotesPath(appDetail.patient)'
 
             ],
 
-            attached: function () {
-                console.log('test')
+            _noteItemChanged: function (item) {
+                this.selectedNote = item;
+                this.$.notesGrid.selectedItems = item ? [item] : [];
+            },
+
+            _prescriptionItemChanged: function (item) {
+                this.selectedPrescription = item
+                this.$.prescriptionGrid.selectedItems = item ? [item] : []
             },
 
             _setNotesPath: function (key) {
                 this.async(function () {
                     this.appDetailPath = null
                     this.appDetailPath = '/notes/' + key
-                }, 1000)
+                })
             },
 
-            _dirtyCheckNotes: function (notes) {
-                this.testAppNotes = []
-                this.testAppNotes = this.appNotes
-            },
             _formatTitle: function (title) {
                 if (title) {
                     var temp = title.split("-")
@@ -429,23 +418,6 @@
                     document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
                     document.querySelector('#appointmentToast').open();
                 })
-            },
-            ready: function () {
-                this.async(function () {
-                    var noteGrid = document.querySelector('#appNotesGrid'),
-                        prescriptionGrid = document.querySelector('#appPrescriptionGrid'),
-                        notePage = document.querySelector('appointment-page')
-                    noteGrid.addEventListener('selected-items-changed', function () {
-                        this.selection.selected(function (index) {
-                            notePage.selectedNote = notePage.appNotes[index];
-                        })
-                    }.bind(noteGrid))
-                    prescriptionGrid.addEventListener('selected-items-changed', function () {
-                        this.selection.selected(function (index) {
-                            notePage.selectedPrescription = notePage.patientPrescriptions[index]
-                        })
-                    }.bind(prescriptionGrid))
-                }, 1000)
             },
             _viewEditableNoteDialog: function () {
 //                this.fire('viewNote', {editNoteKey: this.selectedNote.$key, editNotePatientKey: this.appDetail.patient})
@@ -512,11 +484,6 @@
                     this.appDetailPath.path = '/notes/' + this.appDetail.patient
                 }, 1000)
             },
-//            _updateNote: function (e) {
-//                this.editNoteKey = e.detail.editNoteKey
-//                this.editNotePatientKey = e.detail.editNotePatientKey
-//                this.$.editNoteDialogMain.open()
-//            },
             _editNote: function () {
                 this.editNote = this.editableNote;
                 this.editing = true

@@ -29,7 +29,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../extra-files/address-autocomplete/address-autocomplete.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
-<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../bower_components/poly-filter/poly-filter.html">
 <link rel="import" href="../bower_components/paper-searchbox/paper-searchbox.html">
 <link rel="import" href="shared-styles.html">
@@ -60,7 +59,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             .patient-info {
                 background: white;
-                padding: 15px 0 0 0;
+                padding: 15px 0 0 15px;
                 border-radius: 4px;
                 min-width: 90vw;
                 max-width: 90vw;
@@ -193,7 +192,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 data="{{dataQuery}}"></firebase-query>
         <firebase-query
                 id="queryNotes"
-                path="/notes/[[uid]]"
+                path="[[notesPath}}"
                 app-name="primary"
                 data="{{patientNotes}}"></firebase-query>
         <firebase-document
@@ -203,15 +202,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 data="{{patientData}}"></firebase-document>
         <firebase-document
                 id="documentNotes"
-                path="/notes/[[uid]]"
+                path="[[notesPath]]"
                 app-name="primary"
                 data="{{patientDocNotes}}"></firebase-document>
         <!--<div class="vertical-center">-->
-        <!--<poly-filter-->
-        <!--array-to-filter="[[dataQuery]]"-->
-        <!--filter="[[patientSearch]]"-->
-        <!--filtered-array="{{patientData}}">-->
-        <!--</poly-filter>-->
+        <poly-filter
+                array-to-filter="[[dataQuery]]"
+                filter="[[patientSearch]]"
+                filtered-array="{{patientData}}">
+        </poly-filter>
         <div class="center">
             <paper-material class="patient-info" elevation="1">
                 <div class="horizontal-justified horizontal-layout">
@@ -227,48 +226,60 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <paper-button class="add-patient-button" raised on-tap="openDialog">Add Patient</paper-button>
                     </div>
                 </div>
-                <vaadin-grid visible-rows="5" id="patientGrid">
-                    <table>
-                        <colgroup>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                        </colgroup>
-                        <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Email</th>
-                            <th>DOB</th>
-                            <th>Gender</th>
-                            <th>Street</th>
-                            <th>State</th>
-                            <th>City</th>
-                            <th>Zip</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <template is="dom-repeat" items="{{dataQuery}}">
-                            <tr>
-                                <td>[[item.fullName]]</td>
-                                <td>[[item.phoneNumber]]</td>
-                                <td>[[item.email]]</td>
-                                <td>[[item.birthdate]]</td>
-                                <td>[[item.gender]]</td>
-                                <td>[[item.streetAddress1]]</td>
-                                <td>[[item.state]]</td>
-                                <td>[[item.city]]</td>
-                                <td>[[item.zip]]</td>
-                            </tr>
+                <vaadin-grid aria-label="Notes" class="material" id="patientGrid" items="[[patientData]]" active-item="{{patientItem}}" size="200">
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="lastName" direction="asc">Name</vaadin-grid-sorter>
                         </template>
-                        </tbody>
-                    </table>
+                        <template>[[item.fullName]]</template>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column flex-grow="0" width="124px">
+                        <template class="header">Phone</template>
+                        <template>[[item.phoneNumber]]</template>
+                    </vaadin-grid-column>
+
+                    <vaadin-grid-column>
+                        <template class="header">Email</template>
+                        <template>
+                            <p>[[item.email]]</p>
+                        </template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="124px">
+                        <template class="header">
+                            <vaadin-grid-sorter path="birthdate">DOB</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.birthdate]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="124px">
+                        <template class="header">
+                            <vaadin-grid-sorter path="gender">Gender</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.gender]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column>
+                        <template class="header">Street</template>
+                        <template>[[item.streetAddress1]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="50px">
+                        <template class="header">
+                            <vaadin-grid-sorter path="state">State</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.state]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="74px">
+                        <template class="header">
+                            <vaadin-grid-sorter path="city">City</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.city]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="66px">
+                        <template class="header">
+                            <vaadin-grid-sorter path="zip">Zip</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.zip]]</template>
+                    </vaadin-grid-column>
+
                 </vaadin-grid>
             </paper-material>
             <!--</div>-->
@@ -277,40 +288,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <div class="horizontal-justified horizontal-layout">
                     <h1 class="patients-title">Notes for [[patient.fullName]]</h1>
                     <div hidden$="[[!patient]]" class="justify-right">
-                        <paper-button raised
-                                      class="edit-patient-button"
-                                      on-tap="_viewNoteDialog"
-                                      hidden$="[[!selectedNote]]">
-                            View Note
-                        </paper-button>
+                        <paper-button raised class="edit-patient-button" on-tap="_viewNoteDialog"
+                                      hidden$="[[!selectedNote]]">View Note</paper-button>
                         <paper-button raised class="add-patient-button" on-tap="_openNoteDialog">Add Note</paper-button>
                     </div>
                 </div>
                 <div hidden$="[[!patientNotes]]">
-                    <vaadin-grid visible-rows="5" id="notesGrid">
-                        <table>
-                            <colgroup>
-                                <col max-width="200">
-                                <col max-width="250">
-                                <col flex="1" max-width="1362">
-                            </colgroup>
-                            <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Added By</th>
-                                <th>Note</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <template is="dom-repeat" items="{{storePatientNotes}}">
-                                <tr>
-                                    <td>[[item.date]]</td>
-                                    <td>[[item.creator]]</td>
-                                    <td>[[item.note]]</td>
-                                </tr>
+                    <vaadin-grid aria-label="Notes" class="material" id="patientNotesGrid" items="[[patientNotes]]" active-item="{{noteItem}}" size="200">
+                        <vaadin-grid-column>
+                            <template class="header">
+                                <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
                             </template>
-                            </tbody>
-                        </table>
+                            <template>[[item.date]]</template>
+                        </vaadin-grid-column>
+
+                        <vaadin-grid-column>
+                            <template class="header">
+                                <vaadin-grid-sorter path="creator">Added By</vaadin-grid-sorter>
+                            </template>
+                            <template>[[item.creator]]</template>
+                        </vaadin-grid-column>
+
+                        <vaadin-grid-column>
+                            <template class="header">Note</template>
+                            <template>
+                                <p style="white-space: normal">[[item.note]]</p>
+                            </template>
+                        </vaadin-grid-column>
+
                     </vaadin-grid>
                 </div>
             </paper-material>
@@ -465,6 +470,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: Object,
                     value: null
                 },
+                patientItem: {
+                    observer: '_selectPatient'
+                },
                 patientEdit: {
                     type: Object,
                     value: null
@@ -484,11 +492,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 },
                 toastMessage: String,
                 tempIndex: Number,
-                uid: String,
-                newNote: String,
-                selectedItem: {
-                    type: Object,
+                notesPath: {
+                    type: String,
                     value: null
+                },
+                newNote: String,
+                noteItem: {
+                    observer: '_selectNote'
                 },
                 showEdit: Boolean,
                 selectedNote: {
@@ -501,13 +511,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 'iron-form-submit': 'addPatient',
                 'selected-items-changed': '_updatePatient'
             },
-            observers: [
-                '_checkForChange(patientNotes.splices)'
-            ],
 
-            _checkForChange: function (notes) {
-                if (notes)
-                    this.storePatientNotes = notes.indexSplices[0].object;
+            _selectPatient: function(item) {
+                this.patient = item;
+                this.$.patientGrid.selectedItems = item ? [item] : []
+                this.notesPath = null;
+                this.notesPath = item ? '/notes/' + item.$key : null
+            },
+
+            _selectNote: function (item){
+                this.selectedNote = item;
+                this.$.patientNotesGrid.selectedItems = item ? [item] : []
             },
 
             _concat: function (fN, lN) {
@@ -579,7 +593,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     creator: this.user.email
                 }
                 this.$.documentNotes.data = tempData;
-                this.$.documentNotes.save('/notes/' + this.uid + '/').then(function () {
+                this.$.documentNotes.save('/notes/' + this.patient.$key + '/').then(function () {
                     document.querySelector('#addPatientNotes').close();
                     document.querySelector('#documentNotes').path = '/notes/';
                     document.querySelector('#newNoteInput').value = ''
@@ -614,25 +628,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.$.viewNoteDialog.open()
             },
             ready: function () {
-                var grid = document.querySelector('#patientGrid')
-                var noteGrid = document.querySelector('#notesGrid')
-
-                grid.addEventListener('selected-items-changed', function () {
-                    this.selection.selected(function (index) {
-                        var dataPage = document.querySelector('patient-page');
-                        dataPage.storePatientNotes = [];
-                        dataPage.patient = dataPage.dataQuery[index];
-                        dataPage.uid = dataPage.patient.$key;
-                        dataPage.selectedNote = null;
-                    });
-                }.bind(grid));
-
-                noteGrid.addEventListener('selected-items-changed', function () {
-                    this.selection.selected(function (index) {
-                        var notePage = document.querySelector('patient-page')
-                        notePage.selectedNote = notePage.storePatientNotes[index];
-                    })
-                }.bind(noteGrid))
+//                var grid = document.querySelector('#patientGrid')
+//                var noteGrid = document.querySelector('#notesGrid')
+//
+//                grid.addEventListener('selected-items-changed', function () {
+//                    this.selection.selected(function (index) {
+//                        var dataPage = document.querySelector('patient-page');
+//                        dataPage.storePatientNotes = [];
+//                        dataPage.patient = dataPage.dataQuery[index];
+//                        dataPage.uid = dataPage.patient.$key;
+//                        dataPage.selectedNote = null;
+//                    });
+//                }.bind(grid));
+//
+//                noteGrid.addEventListener('selected-items-changed', function () {
+//                    this.selection.selected(function (index) {
+//                        var notePage = document.querySelector('patient-page')
+//                        notePage.selectedNote = notePage.storePatientNotes[index];
+//                    })
+//                }.bind(noteGrid))
 //                grid.rowDetailsGenerator = function(rowIndex) {
 //                    var element = document.createElement('div');
 //

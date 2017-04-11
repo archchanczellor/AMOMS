@@ -40,7 +40,7 @@
     "paper-toast": "PolymerElements/paper-toast#^1.3.0",
     "bwt-datatable": "^1.0.5",
     "paper-progress": "PolymerElements/paper-progress#^1.0.11",
-    "vaadin-grid": "vaadin/vaadin-grid#^1.2.1",
+    "vaadin-grid": "vaadin/vaadin-grid#^2.0.0",
     "poly-filter": "vguillou/poly-filter#^1.3.0",
     "paper-searchbox": "petja/paper-searchbox#^1.0.2",
     "paper-time-picker": "^1.1.4",
@@ -49,7 +49,8 @@
     "vaadin-combo-box": "vaadin/vaadin-combo-box#^1.3.2",
     "paper-tabs": "PolymerElements/paper-tabs#^1.8.0",
     "vaadin-date-picker": "vaadin/vaadin-date-picker#^1.2.1",
-    "dialog-el": "jshcrowthe/dialog-el#^1.2.0"
+    "dialog-el": "jshcrowthe/dialog-el#^1.2.0",
+    "paper-checkbox": "PolymerElements/paper-checkbox#^1.4.2"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"
@@ -60,6 +61,7 @@
     "paper-styles": "^1.1.4",
     "paper-item": "^1.2.1",
     "iron-form": "^1.1.4",
-    "promise-polyfill": "^6.0.1"
+    "promise-polyfill": "^6.0.1",
+    "paper-checkbox": "^1.4.2"
   }
 }
