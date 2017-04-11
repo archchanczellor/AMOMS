@@ -376,7 +376,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <paper-button hidden$="[[!_computeCheckInButtonView(userRole, appDetail.status)]]" auto-focus
                               on-tap="checkIn">Check In
                 </paper-button>
-                <paper-button hidden$="[[!_computePractitionerView(userRole)]]" on-tap="viewApp">View
+                <paper-button hidden$="[[!_computePractitionerViewAppointment(userRole, appDetail.status)]]" on-tap="viewApp">View
                 </paper-button>
             </div>
             <div class="buttons" hidden$="[[!edit]]">
@@ -567,16 +567,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     return false
             },
             _computePractitionerView: function (role) {
-                if (role == "Practitioner" || role == "Administrator")
-                    return true
-                else
-                    return false
+                return (role == "Practitioner" || role == "Administrator") ? true : false
+            },
+            _computePractitionerViewAppointment: function (role, status) {
+                return (role == "Secretary" || status == 'upcoming') ? false : true
             },
             _computeAdminView: function (role) {
-                if (role == "Administrator")
-                    return true
-                else
-                    return false
+                return role == "Administrator" ? true : false
             },
 
             _routePageChanged: function (page) {

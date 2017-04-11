@@ -60,6 +60,7 @@
 
             .user-info {
                 background: white;
+                padding: 15px 25px 0 25px;
                 border-radius: 4px;
                 min-width: 60vw;
                 width: 90vw;
@@ -68,7 +69,7 @@
             .user-content {
                 @apply(--layout-vertical);
                 height: 35vh;
-                padding: 15px;
+                padding: 15px 15px 15px 5px;
                 -webkit-transition: max-height .25s;
                 -moz-transition: max-height .25s;
                 -ms-transition: max-height .25s;
@@ -174,7 +175,7 @@
             }
 
             .user-heading {
-                padding: 10px 25px 0 25px;
+                padding: 10px 0 10px 0;
                 @apply(--layout-horizontal);
                 @apply(--layout-justified);
             }
@@ -223,33 +224,28 @@
                                 <paper-button raised class="edit-user-button" hidden$="[[!someUser]]"
                                               on-tap="_openEditUserDialog">Edit User
                                 </paper-button>
-                                <paper-button raised class="add-user-button" on-tap="_openAddUserDialog">Add User</paper-button>
+                                <paper-button raised class="add-user-button" on-tap="_openAddUserDialog">Add User
+                                </paper-button>
                             </div>
                         </div>
-                        <vaadin-grid visible-rows="5" id="usersGrid">
-                            <table>
-                                <colgroup>
-                                    <col>
-                                    <col>
-                                    <col>
-                                </colgroup>
-                                <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <template is="dom-repeat" items="{{searchedUsers}}">
-                                    <tr>
-                                        <td>[[item.firstName]] [[item.lastName]]</td>
-                                        <td>[[item.email]]</td>
-                                        <td>[[item.role]]</td>
-                                    </tr>
+                        <vaadin-grid aria-label="Users" class="material" id="usersGrid" items="[[searchedUsers]]"
+                                     active-item="{{userItem}}" size="200">
+                            <vaadin-grid-column>
+                                <template class="header">
+                                    <vaadin-grid-sorter path="lastName">Name</vaadin-grid-sorter>
                                 </template>
-                                </tbody>
-                            </table>
+                                <template>[[item.firstName]]&nbsp;[[item.lastName]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Email</template>
+                                <template>[[item.email]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">
+                                    <vaadin-grid-sorter path="role">Role</vaadin-grid-sorter>
+                                </template>
+                                <template>[[item.role]]</template>
+                            </vaadin-grid-column>
                         </vaadin-grid>
                     </paper-material>
                 </div>
@@ -342,7 +338,10 @@
                     value: null
                 },
                 toastMessage: String,
-                key: String
+                key: String,
+                userItem: {
+                    observer: '_selectUser'
+                }
             },
 
             addUser: function () {
@@ -402,6 +401,12 @@
                 this.userEdit = this.someUser;
                 this.$.editUserDialog.open();
             },
+
+            _selectUser: function (item) {
+                this.someUser = item
+                this.$.usersGrid.selectedItems = item ? [item] : []
+            },
+
             ready: function () {
                 var userGrid = document.querySelector('#usersGrid');
                 userGrid.addEventListener('selected-items-changed', function () {

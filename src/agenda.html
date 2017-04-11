@@ -263,16 +263,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             ],
 
             _routePageChanged: function (appPage) {
-//                if (this.user) {
                 if (!appPage) {
                     window.history.pushState({}, null, '/agenda/schedule');
                 }
                 this.appPage = appPage || 'schedule';
-//                }
-//                else {
-////                    window.history.replaceState({}, null, '/login');
-//                    this.page = 'login';
-//                }
             },
 
             _roleChanged: function (user) {
