@@ -12,132 +12,168 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <!-- shared styles for all views -->
 <dom-module id="shared-styles">
-  <template>
-    <style>
-      .card {
-        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-        padding: 16px;
-        margin: 24px;
-        border-radius: 5px;
-        background-color: #fff;
-        color: #757575;
-      }
-      .circle {
-        display: inline-block;
-        height: 64px;
-        width: 64px;
-        border-radius: 50%;
-        background: #ddd;
-        line-height: 64px;
-        font-size: 30px;
-        color: #555;
-        text-align: center;
-      }
-      h1 {
-        font-size: 22px;
-        margin: 16px 0;
-        color: #212121;
-      }
-      paper-material {
-        background-color: white;
-      }
-      .pageTitle {
-        margin: 20px;
-        font-size: 32px;
-        font-weight: 300;
-        font-family: Roboto;
-      }
-      .appTitle {
-        font-size: 32px;
-        font-weight: 300;
-        font-family: Roboto;
-        text-align: center;
-      }
-      .material {
+    <template>
+        <style>
+            .card {
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                padding: 16px;
+                margin: 24px;
+                border-radius: 5px;
+                background-color: #fff;
+                color: #757575;
+            }
 
-        border: none;
+            .circle {
+                display: inline-block;
+                height: 64px;
+                width: 64px;
+                border-radius: 50%;
+                background: #ddd;
+                line-height: 64px;
+                font-size: 30px;
+                color: #555;
+                text-align: center;
+            }
 
-        font-family: Roboto, sans-serif;
-        --divider-color: rgba(0, 0, 0, var(--dark-divider-opacity));
+            h1 {
+                font-size: 22px;
+                margin: 16px 0;
+                color: #212121;
+            }
 
-        --vaadin-grid-cell: {
-          padding: 0;
-        };
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+                margin-top: 20px;
+            }
 
-        --vaadin-grid-header-cell: {
-          height: 64px;
-          color: rgba(0, 0, 0, var(--dark-secondary-opacity));
-          font-size: 12px;
-        };
+            .status-buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
 
-        --vaadin-grid-body-cell: {
-          height: 48px;
-          color: rgba(0, 0, 0, var(--dark-primary-opacity));
-          font-size: 13px;
-        };
+            .appTitle {
+                text-align: center;
+                margin-bottom: 15px;
+                width: 100%;
+            }
 
-        --vaadin-grid-body-row-hover-cell: {
-          background-color: #EEEEEE;
-          cursor: pointer;
-        };
+            .appStatus {
+                text-transform: capitalize;
+            }
 
-        --vaadin-grid-body-row-selected-cell: {
-          background-color: #F5F5F5;
-        };
+            .app-status-buttons {
+                max-width: 90%;
+            }
 
-        --vaadin-grid-focused-cell: {
-          box-shadow: none;
-          font-weight: bold;
-        };
-      }
+            .cancel-button {
+                background-color: #F44336;
+                color: white;
+            }
 
-      .material .cell {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding-right: 56px;
-      }
+            paper-material {
+                background-color: white;
+            }
 
-      .material .cell.last {
-        padding-right: 24px;
-      }
+            .pageTitle {
+                margin: 20px;
+                font-size: 32px;
+                font-weight: 300;
+                font-family: Roboto;
+            }
 
-      .material .cell.numeric {
-        text-align: right;
-      }
+            .appTitle {
+                font-size: 32px;
+                font-weight: 300;
+                font-family: Roboto;
+                text-align: center;
+            }
 
-      .material paper-checkbox {
-        --primary-color: #3F51B5;
-        margin: 0 24px;
-      }
+            .material {
 
-      .material vaadin-grid-sorter {
-        --vaadin-grid-sorter-arrow: {
-          display: none !important;
-        };
-      }
+                border: none;
 
-      .material vaadin-grid-sorter .cell {
-        flex: 1;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+                font-family: Roboto, sans-serif;
+                --divider-color: rgba(0, 0, 0, var(--dark-divider-opacity));
 
-      .material vaadin-grid-sorter iron-icon {
-        transform: scale(0.8);
-      }
+                --vaadin-grid-cell: {
+                    padding: 0;
+                };
 
-      .material vaadin-grid-sorter:not([direction]) iron-icon {
-        color: rgba(0, 0, 0, var(--dark-disabled-opacity));
-      }
+                --vaadin-grid-header-cell: {
+                    height: 64px;
+                    color: rgba(0, 0, 0, var(--dark-secondary-opacity));
+                    font-size: 12px;
+                };
 
-      .material vaadin-grid-sorter[direction] {
-        color: rgba(0, 0, 0, var(--dark-primary-opacity));
-      }
+                --vaadin-grid-body-cell: {
+                    height: 48px;
+                    color: rgba(0, 0, 0, var(--dark-primary-opacity));
+                    font-size: 13px;
+                };
 
-      .material vaadin-grid-sorter[direction=desc] iron-icon {
-        transform: scale(0.8) rotate(180deg);
-      }
-    </style>
-  </template>
+                --vaadin-grid-body-row-hover-cell: {
+                    background-color: #EEEEEE;
+                    cursor: pointer;
+                };
+
+                --vaadin-grid-body-row-selected-cell: {
+                    background-color: #F5F5F5;
+                };
+
+                --vaadin-grid-focused-cell: {
+                    box-shadow: none;
+                    font-weight: bold;
+                };
+            }
+
+            .material .cell {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding-right: 56px;
+            }
+
+            .material .cell.last {
+                padding-right: 24px;
+            }
+
+            .material .cell.numeric {
+                text-align: right;
+            }
+
+            .material paper-checkbox {
+                --primary-color: #3F51B5;
+                margin: 0 24px;
+            }
+
+            .material vaadin-grid-sorter {
+                --vaadin-grid-sorter-arrow: {
+                    display: none !important;
+                };
+            }
+
+            .material vaadin-grid-sorter .cell {
+                flex: 1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .material vaadin-grid-sorter iron-icon {
+                transform: scale(0.8);
+            }
+
+            .material vaadin-grid-sorter:not([direction]) iron-icon {
+                color: rgba(0, 0, 0, var(--dark-disabled-opacity));
+            }
+
+            .material vaadin-grid-sorter[direction] {
+                color: rgba(0, 0, 0, var(--dark-primary-opacity));
+            }
+
+            .material vaadin-grid-sorter[direction=desc] iron-icon {
+                transform: scale(0.8) rotate(180deg);
+            }
+        </style>
+    </template>
 </dom-module>

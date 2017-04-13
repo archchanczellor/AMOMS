@@ -1,0 +1,112 @@
+<dom-module id="edit-note">
+    <template>
+        <style is="custom-styles" include="shared-styles">
+            :root {
+                display: block;
+            }
+
+            p, .title {
+                font-family: 'Roboto', Arial, sans-serif;
+                font-weight: 300;
+            }
+        </style>
+
+        <firebase-document id="editNoteDocument" app-name="primary" data="{{viewNote}}"></firebase-document>
+
+        <div hidden$="[[!creating]]">
+            <h2>Take a note</h2>
+            <div>
+                <paper-textarea id="addNoteInput" autofocus placeholder="..." value="{{newNote::input}}"
+                                maxlength="500" rows="1" max-rows="5" char-counter></paper-textarea>
+            </div>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button on-tap="_saveNote">Save</paper-button>
+            </div>
+        </div>
+
+        <div hidden$="[[creating]]">
+            <div hidden$="[[editing]]">
+                <h2 class="title">Note created on [[viewNote.human_date]]</h2>
+                <p>[[viewNote.note]]</p>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Dismiss</paper-button>
+                    <paper-button on-tap="_editNote">Edit</paper-button>
+                </div>
+            </div>
+            <div hidden$="[[!editing]]">
+                <h2 class="title">Edit note created on [[editNote.human_date]]</h2>
+                <paper-textarea id="editNoteInput" autofocus value="{{editNote.note::input}}"
+                                maxlength="500" rows="1" max-rows="5" char-counter></paper-textarea>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Cancel</paper-button>
+                    <paper-button on-tap="_saveEdit">Save</paper-button>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'edit-note',
+            properties: {
+                noteLocation: String,
+                editing: {
+                    type: Boolean,
+                    value: false
+                },
+                creating: {
+                    type: Boolean,
+                    value: true
+                },
+                newNote: String,
+                patientKey: String,
+                user: Object
+            },
+            listeners: {
+                'setNote': '_setNote',
+                'addNote': '_addNote'
+            },
+            _setNote: function (e) {
+                this.creating = false
+                this.editing = false
+                this.$.editNoteDocument.path = null
+                this.$.editNoteDocument.path = '/notes/' + e.detail.patient + '/' + e.detail.noteKey
+            },
+            _editNote: function () {
+                this.editing = true;
+                this.editNote = this.viewNote;
+            },
+            _saveEdit: function () {
+                this.set('viewNote.note', this.editNote.note)
+                this.editing = false
+                document.querySelector('my-app').toastMessage = 'Saved Note!'
+                document.querySelector('#mainToast').open()
+            },
+            _addNote: function (e) {
+                this.creating = true
+                this.patientKey = e.detail.patient
+                this.$.editNoteDocument.path = null
+            },
+            _saveNote: function () {
+                var tempData = {
+                    human_date: moment().format("dddd, MMMM Do YYYY, h:mm A"),
+                    date: moment().format('YYYY-MM-DD'),
+                    note: this.newNote,
+                    creator: this.user.email
+                }
+                this.$.editNoteDocument.data = tempData;
+                this.$.editNoteDocument.save('/notes/' + this.patientKey + '/').then(function () {
+                    document.querySelector('#editNoteDialogMain').close();
+                    document.querySelector('#addNoteInput').value = ''
+                    document.querySelector('#editNoteDocument').path = null
+                    document.querySelector('my-app').toastMessage = "Note has been added!";
+                    document.querySelector('#mainToast').open();
+                }, function () {
+                    document.querySelector('my-app').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#mainToast').open();
+                })
+                tempData = null
+            }
+        })
+    </script>
+</dom-module>

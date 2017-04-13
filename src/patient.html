@@ -200,11 +200,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 path="/patients/"
                 app-name="primary"
                 data="{{patientData}}"></firebase-document>
-        <firebase-document
-                id="documentNotes"
-                path="[[notesPath]]"
-                app-name="primary"
-                data="{{patientDocNotes}}"></firebase-document>
         <!--<div class="vertical-center">-->
         <poly-filter
                 array-to-filter="[[dataQuery]]"
@@ -226,7 +221,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <paper-button class="add-patient-button" raised on-tap="openDialog">Add Patient</paper-button>
                     </div>
                 </div>
-                <vaadin-grid aria-label="Notes" class="material" id="patientGrid" items="[[patientData]]" active-item="{{patientItem}}" size="200">
+                <vaadin-grid aria-label="Notes" class="material" id="patientGrid" items="[[patientData]]"
+                             active-item="{{patientItem}}" size="200">
                     <vaadin-grid-column>
                         <template class="header">
                             <vaadin-grid-sorter path="lastName" direction="asc">Name</vaadin-grid-sorter>
@@ -289,17 +285,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <h1 class="patients-title">Notes for [[patient.fullName]]</h1>
                     <div hidden$="[[!patient]]" class="justify-right">
                         <paper-button raised class="edit-patient-button" on-tap="_viewNoteDialog"
-                                      hidden$="[[!selectedNote]]">View Note</paper-button>
+                                      hidden$="[[!selectedNote]]">View Note
+                        </paper-button>
                         <paper-button raised class="add-patient-button" on-tap="_openNoteDialog">Add Note</paper-button>
                     </div>
                 </div>
                 <div hidden$="[[!patientNotes]]">
-                    <vaadin-grid aria-label="Notes" class="material" id="patientNotesGrid" items="[[patientNotes]]" active-item="{{noteItem}}" size="200">
+                    <vaadin-grid aria-label="Notes" class="material" id="patientNotesGrid" items="[[patientNotes]]"
+                                 active-item="{{noteItem}}" size="200">
                         <vaadin-grid-column>
                             <template class="header">
                                 <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
                             </template>
-                            <template>[[item.date]]</template>
+                            <template>[[item.human_date]]</template>
                         </vaadin-grid-column>
 
                         <vaadin-grid-column>
@@ -335,14 +333,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                          required></paper-input>
                             <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
                         </div>
-                        <vaadin-date-picker name="birthdate" id="birthdate" label="Date Of Birth"></vaadin-date-picker>
-
+                        <vaadin-date-picker name="birthdate" id="birthdate" required
+                                            label="Date Of Birth"></vaadin-date-picker>
                         <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
                         <gold-phone-input name="phoneNumber" label="Phone Number" auto-validate
                                           required></gold-phone-input>
-                        <!--<paper-input name="birthdate" on-tap="openDate" id="birthdate" value="{{birthdate}}"-->
-                        <!--label="Birthdate"-->
-                        <!--required></paper-input>-->
                         <paper-dropdown-menu label="Gender" id="gender" name="gender" required>
                             <paper-menu class="dropdown-content">
                                 <paper-item value="female">Female</paper-item>
@@ -413,39 +408,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </div>
             </form>
         </paper-dialog>
-        <paper-dialog id="addPatientNotes"
-                      no-cancel-on-outside-click
-                      class="paper-date-picker-dialog"
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-            <h2>Take a note...</h2>
-            <div>
-                <paper-textarea id="newNoteInput"
-                                autofocus
-                                placeholder="..."
-                                value="{{newNote::input}}"
-                                maxlength="500"
-                                rows="1"
-                                max-rows="5"
-                                char-counter></paper-textarea>
-            </div>
-            <div class="buttons">
-                <paper-button dialog-dismiss>Cancel</paper-button>
-                <paper-button on-tap="_saveNote">Save</paper-button>
-            </div>
-        </paper-dialog>
-        <paper-dialog id="viewNoteDialog"
-                      no-cancel-on-outside-click
-                      class="paper-date-picker-dialog"
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-            <h2>Note on [[selectedNote.date]]</h2>
-            <p>Created by [[selectedNote.creator]]</p>
-            <p class="selected-note">[[selectedNote.note]]</p>
-            <div class="buttons">
-                <paper-button dialog-dismiss>Dismiss</paper-button>
-            </div>
-        </paper-dialog>
         <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="datePicker"
                                date="{{birthdate}}"></app-datepicker-dialog>
         <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel"
@@ -465,7 +427,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             is: 'patient-page',
 
             properties: {
-                patientName: Object,
                 patient: {
                     type: Object,
                     value: null
@@ -477,30 +438,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: Object,
                     value: null
                 },
-                selected: String,
-                errorMessage: {
-                    type: String,
-                    notify: true
-                },
                 patientData: {
                     type: Array,
                     value: []
                 },
-                storePatientNotes: {
-                    type: Array,
-                    value: []
-                },
                 toastMessage: String,
-                tempIndex: Number,
                 notesPath: {
                     type: String,
                     value: null
                 },
-                newNote: String,
                 noteItem: {
                     observer: '_selectNote'
                 },
-                showEdit: Boolean,
                 selectedNote: {
                     type: Object,
                     value: null
@@ -508,18 +457,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             listeners: {
-                'iron-form-submit': 'addPatient',
-                'selected-items-changed': '_updatePatient'
+                'iron-form-submit': 'addPatient'
             },
 
-            _selectPatient: function(item) {
+            _selectPatient: function (item) {
                 this.patient = item;
                 this.$.patientGrid.selectedItems = item ? [item] : []
                 this.notesPath = null;
                 this.notesPath = item ? '/notes/' + item.$key : null
             },
 
-            _selectNote: function (item){
+            _selectNote: function (item) {
                 this.selectedNote = item;
                 this.$.patientNotesGrid.selectedItems = item ? [item] : []
             },
@@ -527,16 +475,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             _concat: function (fN, lN) {
                 return fN + ' ' + lN;
             },
-            _updatePatient: function (e) {
-                this.patient = e.detail.item
-//                this.tempIndex = e.model.index
-                this.uid = this.patient.$key
-            },
+
             _openNoteDialog: function () {
-                this.$.addPatientNotes.open();
-            },
-            testShow: function () {
-                console.log(this.selected);
+                this.fire('viewNote')
+                document.querySelector('edit-note').fire('addNote', {patient: this.patient.$key})
             },
 
             openDialog: function () {
@@ -586,25 +528,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     document.querySelector('#patientToast').open();
                 })
             },
-            _saveNote: function () {
-                var tempData = {
-                    date: this._getTodaysDate(),
-                    note: this.newNote,
-                    creator: this.user.email
-                }
-                this.$.documentNotes.data = tempData;
-                this.$.documentNotes.save('/notes/' + this.patient.$key + '/').then(function () {
-                    document.querySelector('#addPatientNotes').close();
-                    document.querySelector('#documentNotes').path = '/notes/';
-                    document.querySelector('#newNoteInput').value = ''
-                    document.querySelector('patient-page').toastMessage = "Note has been added!";
-                    document.querySelector('#patientToast').open();
-                }, function () {
-                    document.querySelector('patient-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#patientToast').open();
-                })
-                tempData = null
-            },
             openDate: function () {
                 this.$.datePicker.open();
             },
@@ -625,51 +548,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 return today.toLocaleString()
             },
             _viewNoteDialog: function () {
-                this.$.viewNoteDialog.open()
-            },
-            ready: function () {
-//                var grid = document.querySelector('#patientGrid')
-//                var noteGrid = document.querySelector('#notesGrid')
-//
-//                grid.addEventListener('selected-items-changed', function () {
-//                    this.selection.selected(function (index) {
-//                        var dataPage = document.querySelector('patient-page');
-//                        dataPage.storePatientNotes = [];
-//                        dataPage.patient = dataPage.dataQuery[index];
-//                        dataPage.uid = dataPage.patient.$key;
-//                        dataPage.selectedNote = null;
-//                    });
-//                }.bind(grid));
-//
-//                noteGrid.addEventListener('selected-items-changed', function () {
-//                    this.selection.selected(function (index) {
-//                        var notePage = document.querySelector('patient-page')
-//                        notePage.selectedNote = notePage.storePatientNotes[index];
-//                    })
-//                }.bind(noteGrid))
-//                grid.rowDetailsGenerator = function(rowIndex) {
-//                    var element = document.createElement('div');
-//
-//                    grid.getItem(rowIndex, function(error, item) {
-//                        if (!error) {
-//                            // The getUserDetails should return HTML.
-//                            element.innerHTML = item[0]
-//                        }
-//                    });
-//
-//                    return element;
-//                };
-//                var detailsOpenIndex = -1;
-//
-//                // Show details for the selected row
-//                grid.addEventListener('selected-items-changed', function() {
-//                    grid.setRowDetailsVisible(detailsOpenIndex, false);
-//                    var selected = grid.selection.selected();
-//                    if (selected.length == 1) {
-//                        grid.setRowDetailsVisible(selected[0], true);
-//                        detailsOpenIndex = selected[0];
-//                    }
-//                });
+                this.fire('viewNote')
+                document.querySelector('edit-note').fire('setNote', {
+                    patient: this.patient.$key,
+                    noteKey: this.selectedNote.$key
+                })
             }
         })
     </script>

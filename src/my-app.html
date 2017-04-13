@@ -7,6 +7,8 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
+
+<!--Web Components-->
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
@@ -23,7 +25,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="logout.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
@@ -33,6 +34,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../bower_components/vaadin-grid/vaadin-grid-selection-column.html">
 <link rel="import" href="../bower_components/vaadin-grid/vaadin-grid-sorter.html">
+
+<!--Custom Component-->
+<link rel="import" href="edit-note.html">
+<link rel="import" href="edit-user.html">
+<link rel="import" href="logout.html">
 
 <script src="../bower_components/moment/moment.js"></script>
 
@@ -112,35 +118,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 padding-left: 32px;
             }
 
-            .buttons {
-                @apply(--layout-horizontal);
-                @apply(--layout-end-justified);
-                margin-top: 20px;
-            }
-
-            .status-buttons {
-                @apply(--layout-horizontal);
-                @apply(--layout-end-justified);
-            }
-
-            .appTitle {
-                text-align: center;
-                margin-bottom: 15px;
-                width: 100%;
-            }
-
-            .appStatus {
-                text-transform: capitalize;
-            }
-
-            .app-status-buttons {
-                max-width: 90%;
-            }
-
-            .cancel-button {
-                background-color: #F44336;
-                color: white;
-            }
 
             paper-tabs {
                 height: 100%;
@@ -187,7 +164,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
 
             .fixed-dialog-width {
-                width: 35vw;
+                max-width: 40vw;
+                min-width: 30vw;
+                padding-left: 30px;
+                padding-right: 30px;
             }
 
             app-header {
@@ -217,8 +197,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <firebase-document id="appDetail" app-name="primary" path="/appointments/{{appKey}}"
                            data="{{appDetail}}"></firebase-document>
         <firebase-query id="grabApps" app-name="primary" path="/appointments" data="{{appointments}}"></firebase-query>
-        <firebase-document id="editNoteDocumentMain" app-name="primary" data="{{viewNote}}"
-                           path="/notes/{{editNotePatientKey}}/{{editNoteKey}}"></firebase-document>
 
         <poly-filter
                 array-to-filter="[[appointments]]"
@@ -246,10 +224,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <div hidden$="[[!_computeAdminView(filteredUser.role)]]" name="users">
                         <a href="/users" drawer-toggle>Admin</a>
                     </div>
-                    <!--<div hidden$="[[!user]]" name="prescription">-->
-                    <!--<a href="/prescription">Create a Prescription</a>-->
-                    <!--</div>-->
-
                 </iron-selector>
             </app-drawer>
 
@@ -414,28 +388,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </div>
         </paper-dialog>
         <paper-dialog id="editNoteDialogMain" modal class="fixed-dialog-width">
-            <div hidden$="[[editing]]">
-                <h4>View Note on [[viewNote.date]]</h4>
-                <p>[[viewNote.note]]</p>
-                <div class="buttons">
-                    <paper-button dialog-dismiss>Dismiss</paper-button>
-                    <paper-button on-tap="_editNote">Edit</paper-button>
-                </div>
-            </div>
-            <div hidden$="[[!editing]]">
-                <h4>Edit Note on [[editNote.date]]</h4>
-                <paper-textarea id="newNoteAppInput"
-                                autofocus
-                                value="{{editNote.note::input}}"
-                                maxlength="500"
-                                rows="1"
-                                max-rows="5"
-                                char-counter></paper-textarea>
-                <div class="buttons">
-                    <paper-button dialog-dismiss>Cancel</paper-button>
-                    <paper-button on-tap="_saveNote">Save</paper-button>
-                </div>
-            </div>
+            <edit-note user="[[user]]"></edit-note>
+        </paper-dialog>
+
+        <paper-dialog id="viewUserDialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation"
+                      modal class="fixed-dialog-width">
+            <edit-user></edit-user>
         </paper-dialog>
 
         <paper-toast id="mainToast" text="{{toastMessage}}"></paper-toast>
@@ -487,17 +445,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 userRole: {
                     type: String,
                     value: null
-                },
-                editNote: Object,
-                editing: {
-                    type: Boolean,
-                    value: false
                 }
             },
 
             listeners: {
                 'viewApp': 'openAppDialog',
-                'viewNote': '_updateNote'
+                'viewNote': '_updateNote',
+                'viewUser': '_showUserDialog'
             },
 
             observers: [
@@ -616,7 +570,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.patientKey = e.detail.calEvent.patient
                 this.onlyPractitioners = e.detail.practitioners
                 this.patients = e.detail.patients
-
                 this.$.viewAppDialog.open();
             },
 
@@ -722,23 +675,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.edit = false;
                 this.$.viewAppDialog.center();
             },
-            _updateNote: function (e) {
-                this.editNoteKey = e.detail.editNoteKey
-                this.editNotePatientKey = e.detail.editNotePatientKey
+            _updateNote: function () {
                 this.$.editNoteDialogMain.open()
             },
-            _editNote: function () {
-                this.editNote = this.viewNote;
-                this.editing = true
-            },
-            _saveNote: function () {
-//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey + '/'
-                this.viewNote = {}
-                this.viewNote = this.editNote
-                document.querySelector('appointment-page').fire('refreshNotes')
-                this.editing = false
-//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey
-
+            _showUserDialog: function () {
+                this.$.viewUserDialog.open()
             }
         })
 

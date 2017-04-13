@@ -22,5 +22,9 @@
     "merge-stream": "^1.0.0",
     "plylog": "^0.4.0",
     "polymer-build": "^0.4.0"
+  },
+  "scripts": {
+    "dev": "polymer serve",
+    "prod": "polymer build"
   }
 }

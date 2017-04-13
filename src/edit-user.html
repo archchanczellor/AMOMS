@@ -1,0 +1,195 @@
+<dom-module id="edit-user">
+    <template>
+        <style is="custom-styles" include="shared-styles">
+            :root {
+                display: block;
+            }
+
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+            }
+
+            .horizontalLayout {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+                width: 100%;
+            }
+
+            .horizontal-layout {
+                @apply(--layout-horizontal);
+                width: 100%;
+            }
+
+            .vertical-layout {
+                @apply(--layout-vertical);
+                width: 100%;
+            }
+
+            paper-input, gold-email-input, paper-dropdown-menu {
+                width: 48%;
+            }
+        </style>
+
+        <firebase-app api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI"
+                      name="secondary"
+                      auth-domain="amoms-9ecf6.firebaseapp.com"
+                      database-url="https://amoms-9ecf6.firebaseio.com"
+                      storage-bucket="amoms-9ecf6.appspot.com"></firebase-app>
+
+        <firebase-auth id="createUser" app-name="secondary" user="{{tempUser}}" provider="google"
+                       on-error="showError"></firebase-auth>
+
+        <firebase-auth id="primaryAuth" app-name="primary" user="{{user}}" provider="google"
+                       on-error="showError"></firebase-auth>
+
+        <firebase-document id="saveUserData" app-name="primary" data="{{newUser}}"></firebase-document>
+
+        <firebase-document id="editUserData" app-name="primary" path="{{userLoc}}"
+                           data="{{userEdit}}"></firebase-document>
+
+        <div hidden$="[[!creating]]">
+            <h2>Add User</h2>
+            <div class="horizontal-layout">
+                <div class="vertical-layout">
+                    <div class="horizontalLayout">
+                        <paper-input id="userFirstName" name="firstName" label="First Name" autofocus
+                                     required></paper-input>
+                        <paper-input id="userLastName" name="lastName" label="Last Name" required></paper-input>
+                    </div>
+                    <div class="horizontalLayout">
+                    <gold-email-input name="email" id="userEmail" label="Email" auto-validate
+                                      required></gold-email-input>
+                    <paper-input type="password" id="userPassword" name="password" label="Password"
+                                 required></paper-input>
+                    </div>
+                    <paper-dropdown-menu label="role" id="userRole" name="Role" required>
+                        <paper-menu class="dropdown-content">
+                            <paper-item name="administrator" value="administrator">Administrator</paper-item>
+                            <paper-item name="secretary" value="secretary">Secretary</paper-item>
+                            <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
+                        </paper-menu>
+                    </paper-dropdown-menu>
+                </div>
+            </div>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Close</paper-button>
+                <paper-button on-tap="addUser">Submit</paper-button>
+            </div>
+        </div>
+
+        <div hidden$="[[creating]]">
+            <h2>Edit [[userEdit.firstName]] [[userEdit.lastName]]</h2>
+            <div class="horizontalLayout">
+                <paper-input id="editFirst" name="firstName" label="First Name" autofocus
+                             required value="{{userEdit.firstName::input}}"></paper-input>
+                <paper-input id="editLast" name="lastName" label="Last Name"
+                             value="{{userEdit.lastName::input}}" required></paper-input>
+            </div>
+            <!--<gold-email-input name="email" label="Email" validate-->
+            <!--value="{{userEdit.email::input}}" required></gold-email-input>-->
+            <paper-dropdown-menu label="role" id="editRole" name="Role" required>
+                <paper-menu class="dropdown-content" selected="{{_computeSelected(userEdit.role)}}">
+                    <paper-item name="administrator" value="administrator">Administrator</paper-item>
+                    <paper-item name="secretary" value="secretary">Secretary</paper-item>
+                    <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
+                </paper-menu>
+            </paper-dropdown-menu>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Close</paper-button>
+                <paper-button dialog-confirm on-tap="_saveUser">Submit</paper-button>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'edit-user',
+            properties: {
+                creating: {
+                    type: Boolean,
+                    value: false
+                },
+                userEdit: {
+                    type: Object,
+                    value: null
+                },
+                userLoc: {
+                    type: String,
+                    value: null
+                },
+                key: String
+            },
+
+            listeners: {
+                'createUser': '_createUser',
+                'editUser': '_editUser'
+            },
+
+            _copyUser: function (item) {
+                this.userCopy = item;
+            },
+
+            _createUser: function (e) {
+                this.creating = true
+            },
+
+            _editUser: function (e) {
+                this.creating = false
+                this.userLoc = null
+                this.userLoc = '/users/' + e.detail.userKey
+                this.key = e.detail.userKey
+            },
+
+            addUser: function () {
+                this.$.createUser.createUserWithEmailAndPassword(this.$.userEmail.value, this.$.userPassword.value).then(function (firebaseUser) {
+                    //success
+                    document.querySelector('edit-user').key = firebaseUser.uid;
+                    document.querySelector('edit-user').saveUserData();
+                    document.querySelector('#viewUserDialog').close();
+                }, function () {
+                    //failure
+                    document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#userToast').open();
+                })
+            },
+
+            saveUserData: function () {
+                this.$.saveUserData.data = {
+                    firstName: this.$.userFirstName.value,
+                    lastName: this.$.userLastName.value,
+                    email: this.$.userEmail.value,
+                    role: this.$.userRole.value
+                }
+                this.$.saveUserData.save('/users', this.key).then(function () {
+                    document.querySelector('#addUserDialog').close();
+                    document.querySelector('users-admin').toastMessage = "User has been added!";
+                    document.querySelector('#userFirstName').value=''
+                    document.querySelector('#userLastName').value=''
+                    document.querySelector('#userEmail').value=''
+                    document.querySelector('#userPassword').value=''
+                    document.querySelector('#userRole').value = null
+                    document.querySelector('#saveUserData').path = null
+                }, function (e) {
+                    document.querySelector('users-admin').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                    document.querySelector('#userToast').open();
+                })
+
+            },
+            _saveUser: function () {
+                this.set('userEdit.role', this.$.editRole.value)
+                document.querySelector('#viewUserDialog').close();
+                document.querySelector('users-admin').toastMessage = "User has been updated!";
+                document.querySelector('#userToast').open();
+
+            },
+            _computeSelected: function (role) {
+                if (role == 'Administrator')
+                    return 0;
+                else if (role == 'Secretary')
+                    return 1
+                else
+                    return 2
+            }
+        })
+    </script>
+</dom-module>

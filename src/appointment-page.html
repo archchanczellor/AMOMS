@@ -160,7 +160,8 @@
                         <paper-button raised class="add-patient-button" on-tap="_openNoteDialog">Add Note</paper-button>
                     </div>
                 </div>
-                <vaadin-grid aria-label="Notes" class="material" id="notesGrid" items="[[appNotes]]" active-item="{{noteItem}}" size="200">
+                <vaadin-grid aria-label="Notes" class="material" id="notesGrid" items="[[appNotes]]"
+                             active-item="{{noteItem}}" size="200">
                     <vaadin-grid-column>
                         <template class="header">
                             <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
@@ -195,7 +196,8 @@
                         </paper-button>
                     </div>
                 </div>
-                <vaadin-grid id="prescriptionGrid" aria-label="Prescriptions" class="material" items="[[patientPrescriptions]]" active-item="{{prescriptionItem}}" size="200">
+                <vaadin-grid id="prescriptionGrid" aria-label="Prescriptions" class="material"
+                             items="[[patientPrescriptions]]" active-item="{{prescriptionItem}}" size="200">
                     <vaadin-grid-column>
                         <template class="header">
                             <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
@@ -223,46 +225,8 @@
                 </vaadin-grid>
             </paper-material>
         </div>
-        <!--add note-->
-        <paper-dialog id="addAppPatientNotes" no-cancel-on-outside-click entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-            <h2>Take a note</h2>
-            <div>
-                <paper-textarea id="newNoteAppInput"
-                                autofocus
-                                placeholder="..."
-                                value="{{newNote::input}}"
-                                maxlength="500"
-                                rows="1"
-                                max-rows="5"
-                                char-counter></paper-textarea>
-            </div>
-            <div class="buttons">
-                <paper-button dialog-dismiss>Cancel</paper-button>
-                <paper-button on-tap="_saveAppNote">Save</paper-button>
-            </div>
-        </paper-dialog>
         <paper-dialog id="addPrescriptionDialog" class="add-prescription-dialog">
             <prescription-page user="[[user]]" patient="[[appDetail.patient]]"></prescription-page>
-        </paper-dialog>
-        <paper-dialog id="editNoteDialogApp" class="fixed-dialog-width">
-            <div hidden$="[[editing]]">
-                <h4>View Note on [[editableNote.date]]</h4>
-                <p>[[editableNote.note]]</p>
-                <div class="buttons">
-                    <paper-button dialog-dismiss>Dismiss</paper-button>
-                    <paper-button on-tap="_editNote">Edit</paper-button>
-                </div>
-            </div>
-            <div hidden$="[[!editing]]">
-                <h4>Edit Note on [[editNote.date]]</h4>
-                <paper-textarea id="newNoteAppInput" autofocus value="{{editNote.note::input}}" rows="1"
-                                maxlength="500" max-rows="5" char-counter ></paper-textarea>
-                <div class="buttons">
-                    <paper-button dialog-dismiss>Cancel</paper-button>
-                    <paper-button on-tap="_saveNote">Save</paper-button>
-                </div>
-            </div>
         </paper-dialog>
         <paper-toast id="appointmentToast" text="{{toastMessage}}"></paper-toast>
     </template>
@@ -342,10 +306,6 @@
 
             },
 
-            listeners: {
-                'refreshNotes': 'updateNotesList'
-            },
-
             observers: [
                 '_formatTitle(appDetail.title)',
                 '_statusChange(appDetail.status)',
@@ -420,36 +380,15 @@
                 })
             },
             _viewEditableNoteDialog: function () {
-//                this.fire('viewNote', {editNoteKey: this.selectedNote.$key, editNotePatientKey: this.appDetail.patient})
-                this.editNoteKey = this.selectedNote.$key
-                this.editing = false
-                this.$.editNoteDialogApp.open()
+                this.fire('viewNote')
+                document.querySelector('edit-note').fire('setNote', {
+                    patient: this.appDetail.patient,
+                    noteKey: this.selectedNote.$key
+                })
             },
             _openNoteDialog: function () {
-                this.$.addAppPatientNotes.open()
-            },
-            _saveAppNote: function () {
-                var tempData = {
-                    date: this._getTodaysDate(),
-                    note: this.newNote,
-                    creator: this.user.email
-                }
-                this.$.saveNewNoteApp.data = tempData;
-                this.$.saveNewNoteApp.save('/notes/' + this.appDetail.patient + '/').then(function () {
-                    document.querySelector('#addAppPatientNotes').close();
-                    document.querySelector('#saveNewNoteApp').path = '/notes/';
-                    document.querySelector('#newNoteAppInput').value = ''
-                    document.querySelector('my-app').toastMessage = "Note has been added!";
-                    document.querySelector('#mainToast').open();
-                }, function () {
-                    document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#appointmentToast').open();
-                })
-                tempData = null
-            },
-            _getTodaysDate: function () {
-                var today = new Date();
-                return today.toLocaleString()
+                this.fire('viewNote')
+                document.querySelector('edit-note').fire('addNote', {patient: this.appDetail.patient})
             },
             startApp: function () {
                 this.set('appDetail.backgroundColor', '#FF9800')
@@ -477,28 +416,6 @@
             },
             _addPrescription: function () {
                 this.$.addPrescriptionDialog.open();
-            },
-            updateNotesList: function () {
-                this.async(function () {
-                    this.appDetailPath = null
-                    this.appDetailPath.path = '/notes/' + this.appDetail.patient
-                }, 1000)
-            },
-            _editNote: function () {
-                this.editNote = this.editableNote;
-                this.editing = true
-            },
-            _saveNote: function () {
-//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey + '/'
-                this.editableNote = {}
-                this.editableNote = this.editNote
-//                document.querySelector('appointment-page').fire('refreshNotes')
-                this.async(function () {
-                    this.$.appPatientNotes.path = null
-                    this.$.appPatientNotes.path = '/notes/' + this.appDetail.patient
-                }, 1000)
-                this.editing = false
-//                this.$.editNoteDocumentMain.path = '/notes/' + this.editNotePatientKey +'/' + this.editNoteKey
             }
         })
     </script>
