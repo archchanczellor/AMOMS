@@ -117,7 +117,8 @@
                     type: String,
                     value: null
                 },
-                key: String
+                key: String,
+                oldData: String
             },
 
             listeners: {
@@ -138,6 +139,10 @@
                 this.userLoc = null
                 this.userLoc = '/users/' + e.detail.userKey
                 this.key = e.detail.userKey
+                this.async(function () {
+                    this.oldData = JSON.stringify(this.userEdit)
+                }, 1000)
+
             },
 
             addUser: function () {
@@ -160,6 +165,11 @@
                     email: this.$.userEmail.value,
                     role: this.$.userRole.value
                 }
+                document.querySelector('log-action').fire('createLog' , {
+                    action: 'User Added',
+                    oldItem: "",
+                    newItem: this.$.saveUserData.data
+                })
                 this.$.saveUserData.save('/users', this.key).then(function () {
                     document.querySelector('#addUserDialog').close();
                     document.querySelector('users-admin').toastMessage = "User has been added!";
@@ -177,6 +187,11 @@
             },
             _saveUser: function () {
                 this.set('userEdit.role', this.$.editRole.value)
+                document.querySelector('log-action').fire('createLog' , {
+                    action: 'User Edited',
+                    oldItem: JSON.parse(this.oldData),
+                    newItem: this.userEdit
+                })
                 document.querySelector('#viewUserDialog').close();
                 document.querySelector('users-admin').toastMessage = "User has been updated!";
                 document.querySelector('#userToast').open();

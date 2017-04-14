@@ -1,0 +1,82 @@
+<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<dom-module id="parse-object">
+    <template>
+        <style>
+            :root {
+                display: block;
+                line-height: .5;
+            }
+
+            .horizontal-justified {
+                @apply(--layout-horizontal);
+                @apply(--layout-around-justified);
+            }
+
+            h3 {
+                font-family: 'Roboto', 'Noto', sans-serif;
+                font-weight: 300;
+            }
+
+            .horizontal-layout {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .title {
+                margin-right: 20px;
+            }
+        </style>
+        <div class="horizontal-justified">
+            <div class="horizontal-layout" hidden$="[[hideData]]">
+                <div class="title">
+                    <h3>Old Data</h3>
+                </div>
+                <div id="oldParentDiv"></div>
+            </div>
+            <div class="horizontal-layout">
+                <div class="title">
+                    <h3>New Data</h3>
+                </div>
+                <div id="newParentDiv"></div>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'parse-object',
+
+            properties: {
+                item: {
+                    type: Object,
+                    observer: '_parseThatObject'
+                },
+                hideData: Boolean
+            },
+
+            _parseThatObject: function (item) {
+                if (item) {
+                    var oldItem = this.item.oldItem, newItem = this.item.newItem, key
+                    this.hideData = (this.item.oldItem == "") ? true : false
+                    for (key in oldItem) {
+                        if (!oldItem.hasOwnProperty(key)) continue;
+                        var oldP = document.createElement('p')
+                        oldP.className = 'items'
+                        oldP.innerText = key + ': ' + oldItem[key]
+                        document.querySelector('#oldParentDiv').appendChild(oldP)
+                    }
+                    for (key in newItem) {
+                        if (!newItem.hasOwnProperty(key)) continue;
+                        var newP = document.createElement('p')
+                        newP.className = 'items'
+                        newP.innerText = key + ': ' + newItem[key]
+                        document.querySelector('#newParentDiv').appendChild(newP)
+                        $('.items').css({
+                            fontSize: '14px',
+                            fontWeight: '300'
+                        })
+                    }
+                }
+            }
+        })
+    </script>
+</dom-module>

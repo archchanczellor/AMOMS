@@ -10,9 +10,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="shared-styles.html">
-<link rel="import" href="../bower_components/paper-material/paper-material.html">
-<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/poly-filter/poly-filter.html">
 <link rel="import" href="../bower_components/paper-time-picker/paper-time-picker.html">
 <link rel="stylesheet" href="../bower_components/fullcalendar/dist/fullcalendar.min.css">
@@ -129,8 +126,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 filtered-array="{{appointmentsByDate}}"
                 filter-by="eventDate">
         </poly-filter>
-        <iron-pages selected="[[appPage]]" attr-for-selected="name">
-            <div name="schedule">
+                <iron-pages selected="[[appPage]]" attr-for-selected="name">
+                    <div name="schedule">
                 <div class="horizontal-justified">
                     <div class="pageTitle">Schedule</div>
                     <paper-button raised on-tap="openDialog" data-arg="addEventDialog" class="add-event-button">Add

@@ -46,6 +46,9 @@
         </div>
     </template>
     <script>
+        var holdOldNote
+    </script>
+    <script>
         Polymer({
             is: 'edit-note',
             properties: {
@@ -58,9 +61,12 @@
                     type: Boolean,
                     value: true
                 },
+                editNote: Object,
+                viewNote: Object,
                 newNote: String,
                 patientKey: String,
-                user: Object
+                user: Object,
+                oldNote: String
             },
             listeners: {
                 'setNote': '_setNote',
@@ -75,11 +81,17 @@
             _editNote: function () {
                 this.editing = true;
                 this.editNote = this.viewNote;
+                this.oldNote = JSON.stringify(this.viewNote)
             },
             _saveEdit: function () {
+                document.querySelector('log-action').fire('createLog' , {
+                    action: 'Note Edited',
+                    oldItem: JSON.parse(this.oldNote),
+                    newItem: this.editNote
+                })
                 this.set('viewNote.note', this.editNote.note)
                 this.editing = false
-                document.querySelector('my-app').toastMessage = 'Saved Note!'
+                document.querySelector('my-app').toastMessage = 'Note Saved!'
                 document.querySelector('#mainToast').open()
             },
             _addNote: function (e) {
@@ -94,6 +106,7 @@
                     note: this.newNote,
                     creator: this.user.email
                 }
+                this.tempData = tempData
                 this.$.editNoteDocument.data = tempData;
                 this.$.editNoteDocument.save('/notes/' + this.patientKey + '/').then(function () {
                     document.querySelector('#editNoteDialogMain').close();
@@ -101,6 +114,11 @@
                     document.querySelector('#editNoteDocument').path = null
                     document.querySelector('my-app').toastMessage = "Note has been added!";
                     document.querySelector('#mainToast').open();
+                    document.querySelector('log-action').fire('createLog', {
+                        action: 'Note Added',
+                        newItem: document.querySelector('edit-note').tempData,
+                        oldItem: ''
+                    })
                 }, function () {
                     document.querySelector('my-app').toastMessage = "Something seems to have gone wrong. Please Try again.";
                     document.querySelector('#mainToast').open();

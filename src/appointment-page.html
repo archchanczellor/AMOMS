@@ -11,43 +11,9 @@
     <template>
 
         <style include="shared-styles">
-            .horizontal-around {
-                @apply(--layout-horizontal);
-                @apply(--layout-around-justified);
-            }
-
             .horizontal-justified {
                 @apply(--layout-horizontal);
                 @apply(--layout-justified);
-            }
-
-            .horizontal {
-                @apply(--layout-horizontal);
-            }
-
-            .horizontal-center {
-                @apply(--layout-horizontal);
-                @apply(--layout-center);
-            }
-
-            .center {
-                @apply(--layout-horizontal);
-                @apply(--layout-center-center);
-            }
-
-            .cancelled {
-                background-color: #F44336;
-                color: white
-            }
-
-            .in-progress {
-                background-color: #FFFF00;
-                color: black;
-            }
-
-            .completed {
-                background-color: #00E676;
-                color: black;
             }
 
             paper-material {
@@ -68,10 +34,6 @@
                 height: 50px;
             }
 
-            .notes-card {
-                margin-top: 20px;
-            }
-
             .buttons {
                 @apply(--layout-horizontal);
                 @apply(--layout-end-justified);
@@ -90,10 +52,6 @@
                 max-height: 50px;
             }
 
-            #addAppPatientNotes {
-                min-width: 30vw;
-            }
-
             .fixed-back {
                 position: fixed;
                 left: 20px;
@@ -103,10 +61,6 @@
 
             .arrow-back {
                 color: black
-            }
-
-            .add-prescription-dialog {
-                width: 30vw;
             }
         </style>
         <iron-location path="{{path}}" hash="{{hash}}" query="{{query}}" dwell-time="{{dwellTime}}"></iron-location>
@@ -121,12 +75,8 @@
                            data="{{appPrac}}"></firebase-document>
         <firebase-query id="appPatientNotes" app-name="primary" path="{{appDetailPath}}"
                         data="{{appNotes}}"></firebase-query>
-        <firebase-query id="appPatientPrescriptions" app-name="primary" path="/prescriptions/{{appDetail.patient}}"
+        <firebase-query id="appPatientPrescriptions" app-name="primary" path="{{appPrescriptionPath}}"
                         data="{{patientPrescriptions}}"></firebase-query>
-        <firebase-document id="editNoteDoc" app-name="primary" path="/notes/{{appDetail.patient}}/{{editNoteKey}}"
-                           data="{{editableNote}}"></firebase-document>
-        <firebase-document id="saveNewNoteApp" app-name="primary" path="/notes/{{appDetail.patient}}/{{editNoteKey}}"
-                           data="{{savableNote}}"></firebase-document>
         <div class="fixed-back">
             <paper-icon-button class="arrow-back" icon="arrow-left"></paper-icon-button>
         </div>
@@ -166,7 +116,7 @@
                         <template class="header">
                             <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
                         </template>
-                        <template>[[item.date]]</template>
+                        <template>[[item.human_date]]</template>
                     </vaadin-grid-column>
 
                     <vaadin-grid-column>
@@ -191,7 +141,9 @@
                 <div class="horizontal-justified">
                     <h2 class="pageTitle">Prescriptions</h2>
                     <div class="buttons">
-                        <paper-button class="edit-prescription" hidden$="[[!selectedPrescription]]">Edit</paper-button>
+                        <paper-button class="edit-patient-button" on-tap="editPrescription" raised
+                                      hidden$="[[!selectedPrescription]]">View
+                        </paper-button>
                         <paper-button class="start-appointment" on-tap="_addPrescription" raised>Add Prescription
                         </paper-button>
                     </div>
@@ -202,19 +154,19 @@
                         <template class="header">
                             <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
                         </template>
-                        <template>[[item.date]]</template>
+                        <template>[[item.human_date]]</template>
                     </vaadin-grid-column>
-                    <vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="200px">
                         <template class="header">
                             <vaadin-grid-sorter path="practitioner">Prescribed By</vaadin-grid-sorter>
                         </template>
                         <template>[[item.practitioner]]</template>
                     </vaadin-grid-column>
-                    <vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="150px">
                         <template class="header">Prescribed Drug</template>
                         <template>[[item.drugName]]</template>
                     </vaadin-grid-column>
-                    <vaadin-grid-column>
+                    <vaadin-grid-column flex-grow="0" width="150px">
                         <template class="header">Prescribed Amount</template>
                         <template>[[item.drugAmount]]</template>
                     </vaadin-grid-column>
@@ -225,9 +177,6 @@
                 </vaadin-grid>
             </paper-material>
         </div>
-        <paper-dialog id="addPrescriptionDialog" class="add-prescription-dialog">
-            <prescription-page user="[[user]]" patient="[[appDetail.patient]]"></prescription-page>
-        </paper-dialog>
         <paper-toast id="appointmentToast" text="{{toastMessage}}"></paper-toast>
     </template>
 
@@ -236,35 +185,11 @@
             is: 'appointment-page',
             properties: {
                 toastMessage: String,
-                pracKey: String,
-                patientKey: String,
-                appKey: {
-                    type: String,
-                    value: null
-                },
-                appStart: {
-                    type: Boolean,
-                    value: false
-                },
-                appEnd: {
-                    type: Boolean,
-                    value: true
-                },
-                notesKey: String,
                 appTitle: {
                     type: String,
                     value: 'Loading...'
                 },
-                editNoteKey: {
-                    type: String,
-                    value: null
-                },
-                newNote: String,
                 statusChange: {
-                    type: String,
-                    value: null
-                },
-                editPrescriptionKey: {
                     type: String,
                     value: null
                 },
@@ -276,20 +201,15 @@
                     type: Object,
                     value: null
                 },
-                testAppNotes: {
-                    type: Array,
-                    value: null
-                },
-                editing: {
-                    type: Boolean,
-                    value: false
-                },
-                editNote: Object,
                 appDetail: {
                     type: Object,
                     value: null
                 },
                 appDetailPath: {
+                    type: String,
+                    value: null
+                },
+                appPrescriptionPath: {
                     type: String,
                     value: null
                 },
@@ -328,6 +248,10 @@
                     this.appDetailPath = null
                     this.appDetailPath = '/notes/' + key
                 })
+                this.async(function () {
+                    this.appPrescriptionPath = null
+                    this.appPrescriptionPath = '/prescriptions/' + key
+                })
             },
 
             _formatTitle: function (title) {
@@ -350,34 +274,6 @@
                     return 3
                 else
                     return 4
-            },
-            saveAppointmentData: function () {
-                this.$.saveAppointmentData.data = {
-                    status: this.$.status.value
-                }
-                this.$.saveAppointmentData.save('/schedule/appointment/{uid}', this.key).then(function () {
-                    document.querySelector('#editAppointmentStatus').close();
-                    document.querySelector('appointment-page').toastMessage = "User has been added!";
-                }, function (e) {
-                    document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#appointmentToast').open();
-                })
-
-            },
-            _saveAppointment: function () {
-                var key = this.userEdit.$key;
-                var tempData = $("#appointmentStatusForm :input").serializeObject();
-                tempData.status = this.$.editStatus.value;
-                this.$.saveAppointmentData.data = tempData;
-                this.$.saveAppointmentData.save('/schedule/appointment/', key).then(function () {
-                    document.querySelector('#editAppointmentStatus').close();
-                    document.querySelector('appointment-page').toastMessage = "User has been updated!";
-                    document.querySelector('#appointmentToast').open();
-                    document.querySelector('appointment-page').userEdit = null;
-                }, function () {
-                    document.querySelector('appointment-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#appointmentToast').open();
-                })
             },
             _viewEditableNoteDialog: function () {
                 this.fire('viewNote')
@@ -415,7 +311,16 @@
                 return true
             },
             _addPrescription: function () {
-                this.$.addPrescriptionDialog.open();
+                this.fire('viewPrescription')
+                document.querySelector('prescription-page').fire('setPrescription', {
+                    patient: this.appDetail.patient
+                })
+            },
+            editPrescription: function () {
+                this.fire('viewPrescription')
+                document.querySelector('prescription-page').fire('editPrescription', {
+                    patient: this.appDetail.patient, prescription: this.selectedPrescription.$key
+                })
             }
         })
     </script>

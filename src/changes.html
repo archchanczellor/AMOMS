@@ -1,0 +1,77 @@
+<link rel="import" href="parse-object.html">
+<dom-module id="view-changes">
+    <template>
+        <style include="shared-styles">
+            :root {
+                display: block
+            }
+
+            .center-grid {
+                @apply(--layout-vertical);
+                @apply(--layout-center);
+            }
+
+            .details {
+                margin: 5px 0;
+            }
+
+            .material {
+                height: 100%;
+            }
+
+            .center-grid, .notes-card {
+                transition: all 1s ease-in-out;
+            }
+
+            h1 {
+                font-weight: 300;
+                margin-bottom: 0;
+                margin-top: 0;
+                font-size: 2em;
+            }
+        </style>
+
+        <firebase-query path="/logs" data="{{logItems}}" app-name="primary" id="fetchChanges"></firebase-query>
+
+        <div class="center-grid">
+            <paper-material class="notes-card" elevation="2">
+                <h1>Changes</h1>
+                <vaadin-grid aria-label="Notes" class="material" id="changesGrid" items="[[logItems]]"
+                             active-item="{{noteItem}}" on-active-item-changed="_onActiveItemChanged">
+                    <template class="row-details">
+                        <div class="details">
+                            <parse-object item="[[item]]"></parse-object>
+                        </div>
+                    </template>
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="date">Date</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.human_date]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="user">User</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.user]]</template>
+                    </vaadin-grid-column>
+                    <vaadin-grid-column>
+                        <template class="header">
+                            <vaadin-grid-sorter path="action">Action</vaadin-grid-sorter>
+                        </template>
+                        <template>[[item.action]]</template>
+                    </vaadin-grid-column>
+                </vaadin-grid>
+            </paper-material>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'view-changes',
+
+            _onActiveItemChanged: function (e) {
+                this.$.changesGrid.expandedItems = [e.detail.value];
+            }
+        })
+    </script>
+</dom-module>

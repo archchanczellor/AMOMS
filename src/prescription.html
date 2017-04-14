@@ -13,8 +13,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/bwt-datatable/bwt-datatable.html">
-<!--<link rel="import" href="../bower_components/paper-menu/paper-menu.html">-->
-<!--<link rel="import" href="../bower_components/paper-menu/paper-submenu.html">-->
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
@@ -64,28 +62,46 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 data="{{prescriptionData}}">
         </firebase-document>
 
-        <div class="horizontal-around">
-            <div>
-                <div class="center">
-                    <!--<paper-material class="prescription-submit" elevation="1">-->
-                        <form id="addPrescriptionForm">
-                            <h2>Drug Prescription</h2>
-                            <paper-input id="drugName" name="drugName" label="Drug Name" autofocus
-                                         required></paper-input>
-                            <paper-input id="drugAmount" name="drugAmount" label="Dosage" autofocus
-                                         required></paper-input>
-                            <paper-input id="drugDirections" name="drugDirections" label="Directions" autofocus
-                                         required></paper-input>
-                        </form>
-                    <!--</paper-material>-->
-                    <div class="horizontal-end-justified">
-                        <paper-button dialog-dismiss>Cancel</paper-button>
-                        <paper-button class="button" autofocus id="addPrescriptionButton" on-tap="addPrescription">
-                            Save
-                        </paper-button>
-                    </div>
+        <firebase-document id="editPrescriptionDocument" app-name="primary" path="{{editLoc}}"
+                           data="{{viewPrescription}}"></firebase-document>
+        <div hidden$="[[!creating]]">
+            <h2>Drug Prescription</h2>
+            <paper-input id="drugName" name="drugName" label="Drug Name" autofocus
+                         required></paper-input>
+            <paper-input id="drugAmount" name="drugAmount" label="Dosage" autofocus
+                         required></paper-input>
+            <paper-input id="drugDirections" name="drugDirections" label="Directions" autofocus
+                         required></paper-input>
+            <div class="horizontal-end-justified">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button class="button" autofocus id="addPrescriptionButton" on-tap="addPrescription">
+                    Save
+                </paper-button>
+            </div>
+        </div>
+        <div hidden$="[[creating]]">
+            <div hidden$="[[editing]]">
+                <h2>View Drug Prescription Created on [[viewPrescription.human_date]]</h2>
+                <p><b>Name:</b>&nbsp;&nbsp;[[viewPrescription.drugName]]</p>
+                <p><b>Amount:</b>&nbsp;&nbsp;[[viewPrescription.drugAmount]]</p>
+                <p><b>Directions:</b>&nbsp;&nbsp;[[viewPrescription.drugDirections]]</p>
+                <div class="horizontal-end-justified">
+                    <paper-button dialog-dismiss>Cancel</paper-button>
+                    <paper-button class="button" autofocus on-tap="_editPrescription">Edit</paper-button>
                 </div>
-
+            </div>
+            <div hidden$="[[!editing]]">
+                <h2>Edit Drug Prescription</h2>
+                <paper-input autofocus id="drugNameEdit" name="drugName" label="Drug Name" autofocus
+                             required value="{{editPrescription.drugName::input}}"></paper-input>
+                <paper-input id="drugAmountEdit" name="drugAmount" label="Dosage" autofocus
+                             required value="{{editPrescription.drugAmount::input}}"></paper-input>
+                <paper-input id="drugDirectionsEdit" name="drugDirections" label="Directions" autofocus
+                             required value="{{editPrescription.drugDirections::input}}"></paper-input>
+                <div class="horizontal-end-justified">
+                    <paper-button dialog-dismiss>Cancel</paper-button>
+                    <paper-button class="button" on-tap="_saveEdit">Save</paper-button>
+                </div>
             </div>
         </div>
         <paper-toast id="prescriptionToast" text="{{toastMessage}}"></paper-toast>
@@ -103,33 +119,92 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     value: null
                 },
                 patient: String,
-                user: Object
+                user: Object,
+                newPrescription: Object,
+                viewPrescription: Object,
+                editPrescription: Object,
+                editLoc: String,
+                creating: {
+                    type: Boolean,
+                    value: false
+                },
+                editing: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+
+            listeners: {
+                'setPrescription': '_setPrescription',
+                'editPrescription': '_viewPrescription'
+            },
+
+            _setPrescription: function (e) {
+                this.creating = true
+                this.patient = e.detail.patient
+            },
+
+            _viewPrescription: function (e) {
+                this.creating = false
+                this.editing = false
+                this.editLoc = null
+                this.editLoc = '/prescriptions/' + e.detail.patient + '/' + e.detail.prescription
+            },
+
+            _editPrescription: function () {
+                this.editing = true
+                this.editPrescription = this.viewPrescription
+                this.oldData = JSON.stringify(this.viewPrescription)
+                this.fire('centerPrescription')
+            },
+
+            _saveEdit: function () {
+                document.querySelector('log-action').fire('createLog', {
+                    action: 'Prescription Edited',
+                    oldItem: JSON.parse(this.oldData),
+                    newItem: this.editPrescription
+                })
+                this.set('viewPrescription.drugName', this.editPrescription.drugName)
+                this.set('viewPrescription.drugAmount', this.editPrescription.drugAmount)
+                this.set('viewPrescription.drugDirections', this.editPrescription.drugDirections)
+                this.editing = false
+                document.querySelector('my-app').toastMessage = 'Prescription Saved!'
+                document.querySelector('#mainToast').open()
+                this.fire('centerPrescription')
             },
 
             addPrescription: function () {
-                var data = $("#addPrescriptionForm :input").serializeObject();
-                data.practitioner = this.user.email;
-                data.date = this._getTodaysDate();
-                this.$.prescriptionDoc.data = data;
+                var data = {
+                    drugName: this.$.drugName.value,
+                    drugAmount: this.$.drugAmount.value,
+                    drugDirections: this.$.drugDirections.value,
+                    practitioner: this.user.email,
+                    date: moment().format(),
+                    human_date: moment().format("dddd, MMMM Do YYYY, h:mm A")
+                }
+                this.sendData = data
+                this.$.prescriptionDoc.data = data
+                this.$.prescriptionDoc.path = null
                 if (this.patient) {
                     this.$.prescriptionDoc.save('/prescriptions/' + this.patient + '/').then(function () {
-                        document.querySelector('my-app').toastMessage = "Prescription has been added!";
-                        document.querySelector('#addPrescriptionDialog').close();
-                        document.querySelector('#prescriptionDoc').path = '/prescriptions/';
+                        document.querySelector('my-app').toastMessage = "Prescription has been added!"
+                        document.querySelector('#addPrescriptionDialog').close()
+                        document.querySelector('#prescriptionDoc').path = null
                         document.querySelector('#drugName').value = ''
                         document.querySelector('#drugAmount').value = ''
                         document.querySelector('#drugDirections').value = ''
                         document.querySelector('#mainToast').open();
+                        document.querySelector('log-action').fire('createLog', {
+                            action: 'Prescription Added',
+                            oldItem: "",
+                            newItem: document.querySelector('prescription-page').sendData
+                        })
                     }, function () {
                         document.querySelector('my-app').toastMessage = "Something seems to have gone wrong. Please Try again.";
                         document.querySelector('#mainToast').open();
                     });
                 }
-            },
-            _getTodaysDate: function () {
-                var today = new Date();
-                return today.toLocaleString()
-            },
+            }
         })
 
     </script>

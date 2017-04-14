@@ -50,7 +50,8 @@
     "paper-tabs": "PolymerElements/paper-tabs#^1.8.0",
     "vaadin-date-picker": "vaadin/vaadin-date-picker#^1.2.1",
     "dialog-el": "jshcrowthe/dialog-el#^1.2.0",
-    "paper-checkbox": "PolymerElements/paper-checkbox#^1.4.2"
+    "paper-checkbox": "PolymerElements/paper-checkbox#^1.4.2",
+    "midori-jsontable-element": "^1.0.2"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"

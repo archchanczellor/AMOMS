@@ -1,5 +1,4 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
@@ -81,6 +80,13 @@
                 @apply(--layout-horizontal);
                 @apply(--layout-center);
             }
+
+            h1 {
+                font-weight: 300;
+                margin-bottom: 0;
+                margin-top: 0;
+                font-size: 2em;
+            }
         </style>
 
         <firebase-query
@@ -97,7 +103,7 @@
         <div class="horizontal-around">
             <div class="center">
                 <div class="center-page">
-                    <paper-material class="user-info" elevation="5">
+                    <paper-material class="user-info" elevation="2">
                         <div class="user-heading">
                             <h1>Users</h1>
                             <div class="search-box">

@@ -1,0 +1,42 @@
+<dom-module id="log-action">
+    <template>
+        <style>
+            :root {
+                display: none
+            }
+        </style>
+        <firebase-document path="/logs" app-name="primary"  id="logDocument" data="{{loggedItem}}"></firebase-document>
+    </template>
+    <script>
+        Polymer ({
+            is: 'log-action',
+
+            properties: {
+                user: Object,
+                item: {
+                    type: Object,
+                    readOnly: true
+                }
+            },
+
+            listeners: {
+                'createLog': '_createLog',
+                'saveLog': '_saveLog'
+            },
+
+            _createLog: function (e) {
+                var temp = {
+                    user: this.user.email,
+                    date: moment().format(),
+                    human_date: moment().format("dddd, MMMM Do YYYY, h:mm A"),
+                    action: e.detail.action,
+                    oldItem: e.detail.oldItem,
+                    newItem: e.detail.newItem
+                }
+                this.$.logDocument.path = null
+                this.$.logDocument.data = temp
+                this.$.logDocument.save('/logs/')
+            }
+        })
+    </script>
+</dom-module>

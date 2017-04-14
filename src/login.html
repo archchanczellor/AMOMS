@@ -73,7 +73,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             <input name="email" value="[[email]]" hidden>
                             <input name="password" value="[[password]]" hidden>
                             <div class="horizontal">
-                                <paper-button raised class="submit" type="submit" on-tap="signIn">
+                                <paper-button raised class="submit" type="submit" on-tap="validateCred">
                                     Login
                                 </paper-button>
                                 <!--<paper-button raised class="submit" on-tap="signUpWithEmailAndPassword">Sign Up</paper-button>-->
@@ -104,19 +104,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             properties: {
                 errorMessage: String
             },
+
+            listeners: {
+               'signIn': 'signIn'
+            },
+
+            validateCred: function () {
+                document.querySelector('login-credentials').fire('validateCred')
+            },
+
             signIn: function () {
                 this.$.auth.signInWithEmailAndPassword(this.email, this.password)
                     .then(function () {
                         document.querySelector('login-credentials').fire('clearCred');
                         document.querySelector('login-page').email = null;
                         document.querySelector('login-page').password = null;
+                        document.querySelector('my-app').toastMessage = "Sign In Successful";
+                        document.querySelector('#mainToast').open();
                         window.history.pushState({}, null, '/agenda');
                         window.dispatchEvent(new CustomEvent('location-changed'));
                     }, function (e) {
+                        document.querySelector('login-credentials').fire('invalidCred')
                         document.querySelector('my-app').toastMessage = "Something seems to have gone wrong. Please Try again.";
                         document.querySelector('#mainToast').open();
                     });
             },
+
             _logout: function () {
                 this.$.auth.signOut();
             }

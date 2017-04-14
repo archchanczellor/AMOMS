@@ -93,7 +93,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
                 border: none;
 
-                font-family: Roboto, sans-serif;
+                font-family: 'Roboto', sans-serif;
                 --divider-color: rgba(0, 0, 0, var(--dark-divider-opacity));
 
                 --vaadin-grid-cell: {
@@ -103,7 +103,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 --vaadin-grid-header-cell: {
                     height: 64px;
                     color: rgba(0, 0, 0, var(--dark-secondary-opacity));
-                    font-size: 12px;
+                    font-size: 14px;
+                    font-weight: 100;
                 };
 
                 --vaadin-grid-body-cell: {
@@ -174,6 +175,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             .material vaadin-grid-sorter[direction=desc] iron-icon {
                 transform: scale(0.8) rotate(180deg);
             }
+
+            .notes-card {
+                margin-top: 20px;
+                min-width: 50vw;
+                max-width: 95vw;
+                padding: 20px;
+            }
+
+            .center {
+                @apply(--layout-horizontal);
+                @apply(--layout-center-center);
+            }
+
         </style>
     </template>
 </dom-module>
