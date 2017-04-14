@@ -10,7 +10,8 @@
     "src/users.html",
     "src/prescription.html",
     "src/logout.html",
-    "src/my-view404.html"
+    "src/changes.html",
+    "src/view404.html"
   ],
   "sources": [
    "src/**/*",

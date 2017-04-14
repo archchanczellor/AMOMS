@@ -126,17 +126,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 filtered-array="{{appointmentsByDate}}"
                 filter-by="eventDate">
         </poly-filter>
-                <iron-pages selected="[[appPage]]" attr-for-selected="name">
-                    <div name="schedule">
-                <div class="horizontal-justified">
-                    <div class="pageTitle">Schedule</div>
-                    <paper-button raised on-tap="openDialog" data-arg="addEventDialog" class="add-event-button">Add
-                        Appointment
-                    </paper-button>
-                </div>
-                <div class="center-calendar">
-                    <paper-material id="calendar"></paper-material>
-                </div>
+        <iron-pages selected="[[appPage]]" attr-for-selected="name">
+            <div name="schedule">
+                <paper-material elevation="2">
+                    <div class="horizontal-justified">
+                        <div class="pageTitle">Schedule</div>
+                        <paper-button raised on-tap="openDialog" data-arg="addEventDialog" class="add-event-button">Add
+                            Appointment
+                        </paper-button>
+                    </div>
+                    <div class="center-calendar">
+                        <div id="calendar"></div>
+                    </div>
+                </paper-material>
             </div>
             <div name="appointment">
                 <appointment-page appointment="{{selectedAppointment}}"></appointment-page>
