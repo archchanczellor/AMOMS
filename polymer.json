@@ -11,6 +11,7 @@
     "src/prescription.html",
     "src/logout.html",
     "src/changes.html",
+    "src/reports.html",
     "src/view404.html"
   ],
   "sources": [

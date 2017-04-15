@@ -1,0 +1,305 @@
+<link rel="import" href="grab-patient.html">
+<link rel="import" href="grab-appointments.html">
+<link rel="import" href="grab-times.html">
+<link rel="import" href="../bower_components/moment-element/moment-element.html">
+<dom-module id="reports-view">
+    <template>
+        <style include="shared-styles">
+            :root {
+                display: block
+            }
+
+            .horizontal-justified {
+                @apply(--layout-horizontal);
+                @apply(--layout-around-justified);
+                @apply(--layout-center);
+                width: 80vw;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                border-top: 1px solid #EEEEEE;
+                border-bottom: 1px solid #EEEEEE;
+            }
+
+            .button-green {
+                color: white;
+                background: #F44336;
+            }
+
+            paper-material {
+                padding: 20px 30px;
+                border-radius: 2px;
+                background: white;
+                @apply(--layout-vertical);
+                @apply(--layout-center-center);
+            }
+
+            .card-container {
+                width: 100vw;
+                @apply(--layout-vertical);
+                @apply(--layout-center);
+                margin-top: 20px;
+            }
+
+            .grid-container {
+                background: white;
+                width: 80vw;
+            }
+
+            app-toolbar {
+                width: 100%;
+                margin-left: -20px;
+                margin-right: -20px;
+                margin-top: -20px;
+            }
+
+            paper-tab, div[main-title] {
+                color: black;
+                font-weight: 300;
+            }
+
+            div[main-title] {
+                font-size: 28px;
+            }
+
+            paper-tab {
+                padding: 0 10px;
+                @apply(--layout-horizontal);
+                @apply(--layout-center-center);
+                font-size: 18px;
+            }
+
+            paper-tabs {
+                --paper-tabs-selection-bar-color: black;
+            }
+
+            .more-statistics-container {
+                margin-top: 30px;
+                width: 80vw;
+            }
+
+            .weeklyPhoneCallsContainer {
+                width: 80vw;
+            }
+        </style>
+
+        <firebase-query id="getApps" app-name="primary" path="/appointments" data="{{appointments}}"></firebase-query>
+
+        <firebase-query id="getPrac" app-name="primary" path="/users" data="{{users}}"></firebase-query>
+
+        <poly-filter
+                array-to-filter="[[appointments]]"
+                filter="No Show" filter-by="status"
+                filtered-array="{{noShowApp}}">
+        </poly-filter>
+
+        <poly-filter
+                array-to-filter="[[users]]"
+                filter="practitioner" filter-by="role"
+                filtered-array="{{practitioners}}">
+        </poly-filter>
+
+        <div class="card-container">
+            <paper-material class="grid-container" elevation="2">
+                <app-toolbar>
+                    <div main-title>Reports</div>
+                    <paper-tabs selected="{{selected}}">
+                        <paper-tab hidden></paper-tab>
+                        <paper-tab>Weekly Phone Calls</paper-tab>
+                        <paper-tab>Missed Appointments</paper-tab>
+                        <paper-tab on-tap="getAvg">Practitioner Statistics</paper-tab>
+                    </paper-tabs>
+                </app-toolbar>
+                <iron-pages selected="[[selected]]">
+                    <div>Please Select a Report from the right</div>
+                    <div class="weeklyPhoneCallsContainer">
+                        <vaadin-grid class="material" aria-label="Calls" id="callGrid" items="[[phoneCalls]]">
+                            <vaadin-grid-column flex-grow="0" width="66px">
+                                <template>[[index]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Appointment</template>
+                                <template>[[item.title]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Patient</template>
+                                <template>
+                                    <grab-patient property="fullName" patient="[[item.patient]]"></grab-patient>
+                                </template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Phone Number</template>
+                                <template>
+                                    <grab-patient property="phoneNumber" patient="[[item.patient]]"></grab-patient>
+                                </template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Appointment Date</template>
+                                <template>
+                                    <div>
+                                        <moment-element datetime="[[item.start]]"
+                                                        output-format="MMMM DD[,] YYYY"></moment-element>&nbsp;
+                                        <moment-element datetime="[[item.start]]"
+                                                        output-format="h:mm A"></moment-element>
+                                        <span>-</span>
+                                        <moment-element datetime="[[item.end]]" output-format="h:mm A"></moment-element>
+                                    </div>
+                                </template>
+                            </vaadin-grid-column>
+                        </vaadin-grid>
+                    </div>
+                    <div class="weeklyPhoneCallsContainer">
+                        <vaadin-grid class="material" aria-label="No Show" id="noShowGrid" items="[[noShowApp]]">
+                            <vaadin-grid-column flex-grow="0" width="66px">
+                                <template>[[index]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Appointment</template>
+                                <template>[[item.title]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Patient</template>
+                                <template>
+                                    <grab-patient property="fullName" patient="[[item.patient]]"></grab-patient>
+                                </template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Phone Number</template>
+                                <template>
+                                    <grab-patient property="phoneNumber" patient="[[item.patient]]"></grab-patient>
+                                </template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Appointment Date</template>
+                                <template>
+                                    <div>
+                                        <moment-element datetime="[[item.start]]"
+                                                        output-format="MMMM DD[,] YYYY"></moment-element>&nbsp;
+                                        <moment-element datetime="[[item.start]]"
+                                                        output-format="h:mm A"></moment-element>
+                                        <span>-</span>
+                                        <moment-element datetime="[[item.end]]" output-format="h:mm A"></moment-element>
+                                    </div>
+                                </template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Status</template>
+                                <template>[[item.status]]</template>
+                            </vaadin-grid-column>
+                        </vaadin-grid>
+                    </div>
+                    <div class="weeklyPhoneCallsContainer">
+                        <vaadin-grid class="material" aria-label="Practitioner Statistics"
+                                     id="practitionerStatisticsGrid"
+                                     items="[[practitioners]]">
+                            <vaadin-grid-column flex-grow="0" width="66px">
+                                <template>[[index]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Practitioner</template>
+                                <template>[[item.firstName]]&nbsp;[[item.lastName]]</template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Number of Appointments</template>
+                                <template>
+                                    <grab-appointments practitioner="[[item.$key]]"
+                                                       appointments="[[appointments]]"></grab-appointments>
+                                </template>
+                            </vaadin-grid-column>
+                            <vaadin-grid-column>
+                                <template class="header">Average Duration</template>
+                                <template>
+                                    <grab-times practitioner="[[item.$key]]"
+                                                appointments="[[appointments]]"></grab-times>
+                                </template>
+                            </vaadin-grid-column>
+                        </vaadin-grid>
+                        <div class="horizontal-justified">
+                            <div>Average Duration for all Practitioners</div>
+                            <div>[[averageMoment]]</div>
+                        </div>
+                    </div>
+                </iron-pages>
+            </paper-material>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'reports-view',
+
+            properties: {
+                selected: {
+                    type: Number,
+                    value: 0
+                },
+                nextMonday: {
+                    type: String,
+                    value: function () {
+                        var nextWeek = moment()
+                        do {
+                            nextWeek = nextWeek.add(1, 'd')
+                        }
+                        while (nextWeek.weekday() != 1)
+                        return nextWeek.format('YYYY-MM-DD')
+                    }
+                },
+                nextFriday: {
+                    type: String,
+                    value: function () {
+                        var nextWeek = moment()
+                        do {
+                            nextWeek = nextWeek.add(1, 'd')
+                        }
+                        while (nextWeek.weekday() != 1)
+                        while (nextWeek.weekday() != 5) {
+                            nextWeek.add(1, 'd')
+                        }
+                        return nextWeek.format('YYYY-MM-DD')
+                    }
+                },
+                phoneCalls: {
+                    type: Array,
+                    value: []
+                },
+                counter: {
+                    type: Number,
+                    value: 0
+                },
+                appointmentsLength: {
+                    type: Array,
+                    value: []
+                },
+                averageMoment: {
+                    type: String,
+                    value: null
+                }
+            },
+
+            observers: [
+                '_getNextWeekAppointments(appointments.splices)'
+            ],
+
+            _getNextWeekAppointments: function (apps) {
+                if (apps) {
+                    if (moment(this.appointments[this.counter].eventDate).isBetween(this.nextMonday, this.nextFriday, null, '[]'))
+                        this.push('phoneCalls', this.appointments[this.counter])
+                    if (this.appointments[this.counter].status == 'Concluded' && this.appointments[this.counter].actualStart) {
+                        var start = moment(this.appointments[this.counter].actualStart, 'YYYY-MM-DDTHH:mm:ssZ'),
+                            end = moment(this.appointments[this.counter].actualEnd, 'YYYY-MM-DDTHH:mm:ssZ')
+                        this.push('appointmentsLength', moment.utc(end.diff(start)).format("HH:mm:ss"))
+                    }
+                    this.counter++
+
+                }
+            },
+            getAvg: function () {
+                var time = this.appointmentsLength, avg
+                var duration = moment.duration(moment(time[0], "HH:mm:ss").format("HH:mm:ss"))
+                for (var i = 1; i < time.length; i++) {
+                    duration.add(moment(time[i], "HH:mm:ss").format("HH:mm:ss"))
+                }
+                avg = duration.asMilliseconds() / time.length
+                this.averageMoment = moment.utc(avg).format("HH:mm:ss")
+            }
+        })
+    </script>
+</dom-module>

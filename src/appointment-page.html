@@ -288,6 +288,7 @@
                 this.set('appDetail.backgroundColor', '#FF9800')
                 this.set('appDetail.textColor', 'black')
                 this.set('appDetail.status', "In-Progress")
+                this.set('appDetail.actualStart', moment().format())
                 if (document.querySelector('schedule-page'))
                     document.querySelector('schedule-page').fire('updateAgenda')
             },
@@ -295,6 +296,7 @@
                 this.set('appDetail.backgroundColor', '#2196F3')
                 this.set('appDetail.textColor', 'white')
                 this.set('appDetail.status', "Concluded")
+                this.set('appDetail.actualEnd', moment().format())
                 if (document.querySelector('schedule-page'))
                     document.querySelector('schedule-page').fire('updateAgenda')
             },

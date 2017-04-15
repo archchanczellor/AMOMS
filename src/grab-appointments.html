@@ -1,0 +1,45 @@
+<dom-module id="grab-appointments">
+    <template>
+        <style>
+            :root {
+                display: block;
+            }
+        </style>
+        <poly-filter
+                array-to-filter="[[appointments]]"
+                filter="[[practitioner]]"
+                filtered-array="{{practitionerAppointments}}"
+                filter-by="practitioner"></poly-filter>
+
+        <span>[[numberOfAppointments]]</span>
+    </template>
+    <script>
+        Polymer({
+            is: 'grab-appointments',
+            properties: {
+                practitioner: {
+                    type: String,
+                    value: null
+                },
+                appointments: {
+                    type: Array,
+                    value: [],
+                },
+                practitionerAppointments: {
+                    type: Array,
+                    value: []
+                },
+                numberOfAppointments: {
+                    type: String,
+                    value: null
+                }
+            },
+            observers: [
+                '_grabLength(practitionerAppointments.splices)'
+            ],
+            _grabLength: function (apps) {
+                this.numberOfAppointments = this.practitionerAppointments.length
+            }
+        })
+    </script>
+</dom-module>

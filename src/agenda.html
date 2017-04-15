@@ -97,7 +97,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 @apply(--layout-horizontal);
                 @apply(--layout-justified);
             }
-
         </style>
         <firebase-auth id="agendaAuth" user="{{user}}" app-name="primary" provider="google"
                        on-error="handleError"></firebase-auth>
@@ -124,7 +123,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 array-to-filter="[[appointments]]"
                 filter="[[appDate]]"
                 filtered-array="{{appointmentsByDate}}"
-                filter-by="eventDate">
+                filter-by="eventDate"
+                filter-method="equals">
         </poly-filter>
         <iron-pages selected="[[appPage]]" attr-for-selected="name">
             <div name="schedule">
@@ -173,9 +173,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <paper-input id="eventDescription" required placeholder="Description" type="text"></paper-input>
                 </div>
                 <div class="right-form">
-                    <paper-input name="appDatePicker" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})" id="eventDate"
-                                 label="Event Date" value="[[appDate]]" on-tap="openDialog" placeholder="YYYY-MM-DD"
-                                 required auto-validate></paper-input>
+                    <vaadin-date-picker no-weekends id="eventDate" value="{{appDate}}" label="Pick a date" min="[[minDate]]"></vaadin-date-picker>
+                    <!--<paper-input name="appDatePicker" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})" id="eventDate"-->
+                                 <!--label="Event Date" value="[[appDate]]" on-tap="openDialog" placeholder="YYYY-MM-DD"-->
+                                 <!--required auto-validate></paper-input>-->
                     <paper-input id="startTimeInput" label="Start Time" required on-tap="openDialog"
                                  name="startTimeDialog" auto-validate value="[[startTime]]"></paper-input>
                     <paper-input id="endTimeInput" label="End Time" required on-tap="openDialog" name="endTimeDialog"
@@ -233,6 +234,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     type: String,
                     observer: '_fixDate'
                 },
+                minDate: {
+                    type: String,
+                    value: function () {
+                        return moment().format('YYYY-MM-DD')
+                    }
+                },
                 appDate: String,
                 endTime: {
                     type: String,
@@ -272,10 +279,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 console.log(user)
             },
 
-            _fixDate: function () {
-                this.appDate = this.eventDate.replace(/\//g, '-');
-            },
-
             updateEndTime: function () {
                 if (this.startTime) {
                     var splitMeridian = this.startTime.split(" ")
@@ -307,19 +310,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             handleAgendaUpdate: function () {
                 this.async(function () {
-                    if (this.userData.role == "Administrator" || this.userData.role == "Secretary") {
-                        $("#calendar").fullCalendar('removeEvents')
-                        $("#calendar").fullCalendar('addEventSource', this.appointments)
-                    }
-                    else if (this.appointments.length != 0) {
-                        for (var i = 0; i < this.appointments.length; i++) {
-                            if (this.appointments[i].practitioner == this.user.uid) {
-                                this.push('practitionerAppointments', this.appointments[i])
-                                $("#calendar").fullCalendar('removeEvents')
-                                $("#calendar").fullCalendar('addEventSource', this.practitionerAppointments)
-                            }
-                        }
-                    }
+                    this.$.queryAppointments.path = null
+                    this.$.queryAppointments.path = '/appointments'
+//                    if (this.userData.role == "Administrator" || this.userData.role == "Secretary") {
+//                        $("#calendar").fullCalendar('removeEvents')
+//                        $("#calendar").fullCalendar('addEventSource', this.appointments)
+//                    }
+//                    else if (this.appointments.length != 0) {
+//                        for (var i = 0; i < this.appointments.length; i++) {
+//                            if (this.appointments[i].practitioner == this.user.uid) {
+//                                this.push('practitionerAppointments', this.appointments[i])
+//                                $("#calendar").fullCalendar('removeEvents')
+//                                $("#calendar").fullCalendar('addEventSource', this.practitionerAppointments)
+//                            }
+//                        }
+//                    }
                 }, 1000)
             },
 
@@ -391,11 +396,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     this.$.endTimeInput.validate())) {
                     return false;
                 }
-                var fixedDate = this.eventDate.replace(/\//g, '-')
-                var weekDate = moment(fixedDate).weekday()
+                var fixedDate = moment(this.$.eventDate.value)
+                var weekDate = fixedDate.weekday()
                 var start = moment(this.startTime, ["h:mm A"])
                 var end = moment(this.endTime, ["h:mm A"])
-                if (!(moment(fixedDate).isSameOrAfter(moment(moment().format('YYYY-MM-DD'))))) {
+                if (!fixedDate.isSameOrAfter(moment(moment().format('YYYY-MM-DD')))) {
                     this.$.eventDate.errorMessage = "Please choose a date before today"
                     this.$.eventDate.invalid = true;
                     return false
@@ -466,6 +471,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             patients: patients,
                             practitioners: pracitioners
                         })
+                    },
+                    eventMouseover: function (event) {
+                        $(this).css('cursor', 'pointer')
                     }
                 })
             },

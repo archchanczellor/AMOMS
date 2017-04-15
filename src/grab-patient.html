@@ -1,0 +1,46 @@
+<dom-module id="grab-patient">
+    <template>
+        <style>
+            :root {
+                display: block
+            }
+        </style>
+        <firebase-document path="{{patientPath}}"
+                           data="{{patientItem}}"
+                           app-name="primary"
+                           id="grabPatientDoc"></firebase-document>
+
+        <div>{{patientData}}</div>
+    </template>
+    <script>
+        Polymer ({
+            is: 'grab-patient',
+            properties: {
+                patient: {
+                    type: String,
+                    value: null
+                },
+                patientItem: {
+                    type: Object,
+                    value: null
+                },
+                patientData: String,
+                property: String
+            },
+            observers: [
+                '_setPath(patient)',
+                '_setData(patientItem.fullName)'
+            ],
+            _setData: function(name) {
+                if(name)
+                    this.patientData = this.patientItem[this.property]
+            },
+            _setPath: function(patient) {
+                if(patient) {
+                    this.patientPath = null
+                    this.patientPath = '/patients/' + this.patient
+                }
+            }
+        })
+    </script>
+</dom-module>

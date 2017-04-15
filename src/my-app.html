@@ -42,7 +42,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="edit-user.html">
 <link rel="import" href="logout.html">
 <link rel="import" href="logging.html">
-<link rel="import" href="">
+<link rel="import" href="prescription.html">
 
 <script src="../bower_components/moment/moment.js"></script>
 
@@ -124,9 +124,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             paper-tabs {
                 height: 100%;
-            }
-
-            paper-tabs {
                 --paper-tabs-selection-bar-color: white;
             }
 
@@ -220,8 +217,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <div hidden$="[[user]]" name="login">
                         <a name="login" href="/login" drawer-toggle>Login</a>
                     </div>
-                    <div hidden$="[[!user]]" name="agenda">
-                        <a href="/agenda/schedule" drawer-toggle>Schedule</a>
+                    <div hidden$="[[!user]]" name="schedule">
+                        <a name="schedule" href="/agenda/schedule" drawer-toggle>Schedule</a>
                     </div>
                     <div hidden$="[[!_computeSecretaryView(filteredUser.role)]]" name="patient">
                         <a href="/patient" drawer-toggle>Patients</a>
@@ -231,6 +228,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     </div>
                     <div hidden$="[[!_computeAdminView(filteredUser.role)]]" name="changes">
                         <a href="/changes" drawer-toggle>Changes</a>
+                    </div>
+                    <div hidden$="[[!user]]" name="reports">
+                        <a href="/reports" drawer-toggle>Reports</a>
                     </div>
                 </iron-selector>
             </app-drawer>
@@ -259,6 +259,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             <paper-tab hidden$="[[!_computeAdminView(userRole)]]" name="changes">
                                 <a href="/changes">Changes</a>
                             </paper-tab>
+                            <paper-tab hidden$="[[!user]]" name="reports">
+                                <a href="/reports">Reports</a>
+                            </paper-tab>
                         </paper-tabs>
                         <div main-title></div>
                         <div hidden$="[[!user]]">
@@ -275,6 +278,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                   practitioner="Practitioner" error-message="{{errorMessage}}"></patient-page>
                     <users-admin hidden$="[[!_computeAdminView(userRole)]]" name="users"></users-admin>
                     <view-changes hidden$="[[!_computeAdminView(userRole)]]" name="changes"></view-changes>
+                    <reports-view hidden$="[[!user]]" name="reports"></reports-view>
                     <!--<prescription-page name="prescription"></prescription-page>-->
                     <my-view404 name="view404"></my-view404>
                 </iron-pages>
@@ -589,6 +593,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             openAppDialog: function (e) {
                 this.appKey = e.detail.calEvent.$key;
+                this.edit = false
 //                this.appDetail = e.detail.calEvent;
                 this.pracKey = e.detail.calEvent.practitioner
                 this.patientKey = e.detail.calEvent.patient

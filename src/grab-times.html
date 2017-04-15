@@ -1,0 +1,70 @@
+<dom-module id="grab-times">
+    <template>
+        <style>
+            :root {
+                display: block;
+            }
+        </style>
+        <poly-filter
+                array-to-filter="[[appointments]]"
+                filter="[[practitioner]]"
+                filtered-array="{{practitionerAppointments}}"
+                filter-by="practitioner"></poly-filter>
+
+        <span hidden$="[[!averageMoment]]">[[averageMoment]]</span>
+        <span hidden$="[[averageMoment]]">N/A</span>
+    </template>
+    <script>
+        Polymer({
+            is: 'grab-times',
+            properties: {
+                practitioner: {
+                    type: String,
+                    value: null
+                },
+                appointments: {
+                    type: Array,
+                    value: [],
+                },
+                practitionerAppointments: {
+                    type: Array,
+                    value: []
+                },
+                avgerageMoment: {
+                    type: String,
+                    value: null
+                },
+                appDuration: {
+                    type: Array,
+                    value: []
+                }
+            },
+            observers: [
+                '_grabAvg(practitionerAppointments.splices)'
+            ],
+            _grabAvg: function (apps) {
+                var app = this.practitionerAppointments
+                if (app.length != 0) {
+                    for (var i = 0; i < app.length; i++) {
+                        if (app[i].status == 'Concluded' && app[i].actualStart) {
+                            var start = moment(app[i].actualStart, 'YYYY-MM-DDTHH:mm:ssZ'),
+                                end = moment(app[i].actualEnd, 'YYYY-MM-DDTHH:mm:ssZ')
+                            this.push('appDuration', moment.utc(end.diff(start)).format("HH:mm:ss"))
+                        }
+                    }
+
+                    if (this.appDuration.length != 0) {
+                        var time = this.appDuration, avg
+                        var duration = moment.duration(moment(time[0], "HH:mm:ss").format("HH:mm:ss"))
+                        for (var i = 1; i < time.length; i++) {
+                            duration.add(moment(time[i], "HH:mm:ss").format("HH:mm:ss"))
+                        }
+                        avg = duration.asMilliseconds() / time.length
+                        this.averageMoment = moment.utc(avg).format("HH:mm:ss")
+                    }
+                }
+                this.appDuration = []
+            }
+        })
+    </script>
+</dom-module>
