@@ -66,6 +66,7 @@
                 @apply(--layout-horizontal);
                 @apply(--layout-center-center);
                 font-size: 18px;
+                --paper-tab-ink: #757575;
             }
 
             paper-tabs {
@@ -281,12 +282,11 @@
             },
 
             _getNextWeekAppointments: function (apps) {
-                do {
+                while (this.counter < this.appointments.length) {
                     if (moment(this.appointments[this.counter].eventDate).isBetween(this.nextMonday, this.nextFriday, null, '[]'))
                         this.push('phoneCalls', this.appointments[this.counter])
                     this.counter++
                 }
-                while (this.counter < this.appointments.length)
             },
             getAvg: function () {
                 var time = [], avg
