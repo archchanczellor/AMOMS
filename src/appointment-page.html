@@ -84,6 +84,7 @@
                 <p>Description: &nbsp;[[appDetail.description]]</p>
                 <p>Patient: &nbsp;[[appPatient.fullName]]</p>
                 <p>Practitioner: &nbsp;[[appPrac.firstName]] [[appPrac.lastName]]</p>
+                <p hidden$="[[!appDuration]]">Duration: &nbsp;[[appDuration]]</p>
                 <div class="horizontal-justified">
                     <p>Status: &nbsp;[[appDetail.status]]</p>
                     <paper-button class="start-appointment" raised hidden$="[[_computeStart(statusChange)]]"
@@ -220,6 +221,10 @@
                 },
                 prescriptionItem: {
                     observer: '_prescriptionItemChanged'
+                },
+                appDuration: {
+                    type: String,
+                    value: null
                 }
 
             },
@@ -228,7 +233,6 @@
                 '_formatTitle(appDetail.title)',
                 '_statusChange(appDetail.status)',
                 '_setNotesPath(appDetail.patient)'
-
             ],
 
             _noteItemChanged: function (item) {
@@ -256,6 +260,11 @@
                 if (title) {
                     var temp = title.split("-")
                     this.appTitle = temp[0];
+                    this.appDuration = null
+                    if (this.appDetail.actualStart && this.appDetail.actualEnd) {
+                        var start = moment(this.appDetail.actualStart,"HH:mm:ss"), end = moment(this.appDetail.actualEnd,"HH:mm:ss")
+                        this.appDuration = moment.utc(end.diff(start)).format("HH:mm:ss")
+                    }
                 }
             },
             _statusChange: function (status) {
