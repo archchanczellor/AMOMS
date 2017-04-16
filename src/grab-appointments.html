@@ -7,7 +7,7 @@
         </style>
         <poly-filter
                 array-to-filter="[[appointments]]"
-                filter="[[practitioner]]"
+                filter="[[prac]]"
                 filtered-array="{{practitionerAppointments}}"
                 filter-by="practitioner"></poly-filter>
 
@@ -32,13 +32,23 @@
                 numberOfAppointments: {
                     type: String,
                     value: null
+                },
+                prac: {
+                    type: String,
+                    value: 'filter'
                 }
             },
             observers: [
-                '_grabLength(practitionerAppointments.splices)'
+                '_grabLength(practitionerAppointments.splices)',
+                '_setPrac(practitioner)'
             ],
             _grabLength: function (apps) {
                 this.numberOfAppointments = this.practitionerAppointments.length
+            },
+            _setPrac: function(prac) {
+                if(prac) {
+                    this.prac = this.practitioner
+                }
             }
         })
     </script>

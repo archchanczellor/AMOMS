@@ -278,8 +278,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                   practitioner="Practitioner" error-message="{{errorMessage}}"></patient-page>
                     <users-admin hidden$="[[!_computeAdminView(userRole)]]" name="users"></users-admin>
                     <view-changes hidden$="[[!_computeAdminView(userRole)]]" name="changes"></view-changes>
-                    <reports-view hidden$="[[!user]]" name="reports"></reports-view>
-                    <!--<prescription-page name="prescription"></prescription-page>-->
+                    <reports-view hidden$="[[!user]]" appointments="[[appointments]]" name="reports"></reports-view>
                     <my-view404 name="view404"></my-view404>
                 </iron-pages>
 
@@ -559,13 +558,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             _routePageChanged: function (page) {
-//                if (this.user) {
                 this.page = page || 'login';
-                //                }
-//                else {
-////                    window.history.replaceState({}, null, '/login');
-//                    this.page = 'login';
-//                }
             },
 
             _pageChanged: function (page) {
@@ -604,7 +597,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             viewApp: function () {
                 this.$.viewAppDialog.close();
-//                document.querySelector('appointment-page').appKey = this.appKey;
                 window.history.pushState({}, null, '/agenda/appointment?' + this.appKey);
                 window.dispatchEvent(new CustomEvent('location-changed'));
             },
@@ -643,7 +635,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     this.edit = false;
                     this.$.viewAppDialog.center();
                 }
-                //some toast message
+                else {
+                    this.toastMessage = "Something went wrong. Please try again."
+                    this.$.mainToast.open()
+                }
             },
             _validateEvent: function () {
                 var weekDate = moment(this.formatEventDate).weekday()

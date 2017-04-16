@@ -82,8 +82,6 @@
             }
         </style>
 
-        <firebase-query id="getApps" app-name="primary" path="/appointments" data="{{appointments}}"></firebase-query>
-
         <firebase-query id="getPrac" app-name="primary" path="/users" data="{{users}}"></firebase-query>
 
         <poly-filter
@@ -104,7 +102,7 @@
                     <div main-title>Reports</div>
                     <paper-tabs selected="{{selected}}">
                         <paper-tab hidden></paper-tab>
-                        <paper-tab>Weekly Phone Calls</paper-tab>
+                        <paper-tab on-tap="_getNextWeekAppointments">Weekly Phone Calls</paper-tab>
                         <paper-tab>Missed Appointments</paper-tab>
                         <paper-tab on-tap="getAvg">Practitioner Statistics</paper-tab>
                     </paper-tabs>
@@ -264,6 +262,10 @@
                     type: Number,
                     value: 0
                 },
+                appointments: {
+                    type: Array,
+                    value: []
+                },
                 appointmentsLength: {
                     type: Array,
                     value: []
@@ -271,28 +273,30 @@
                 averageMoment: {
                     type: String,
                     value: null
+                },
+                testApps: {
+                    type: Array,
+                    value: []
                 }
             },
-
-            observers: [
-                '_getNextWeekAppointments(appointments.splices)'
-            ],
 
             _getNextWeekAppointments: function (apps) {
-                if (apps) {
+                do {
                     if (moment(this.appointments[this.counter].eventDate).isBetween(this.nextMonday, this.nextFriday, null, '[]'))
                         this.push('phoneCalls', this.appointments[this.counter])
-                    if (this.appointments[this.counter].status == 'Concluded' && this.appointments[this.counter].actualStart) {
-                        var start = moment(this.appointments[this.counter].actualStart, 'YYYY-MM-DDTHH:mm:ssZ'),
-                            end = moment(this.appointments[this.counter].actualEnd, 'YYYY-MM-DDTHH:mm:ssZ')
-                        this.push('appointmentsLength', moment.utc(end.diff(start)).format("HH:mm:ss"))
-                    }
                     this.counter++
-
                 }
+                while (this.counter < this.appointments.length)
             },
             getAvg: function () {
-                var time = this.appointmentsLength, avg
+                var time = [], avg
+                for (var i = 0; i < this.appointments.length; i++) {
+                    if (this.appointments[i].status == 'Concluded' && this.appointments[i].actualStart) {
+                        var start = moment(this.appointments[i].actualStart, 'YYYY-MM-DDTHH:mm:ssZ'),
+                            end = moment(this.appointments[i].actualEnd, 'YYYY-MM-DDTHH:mm:ssZ')
+                        time.push(moment.utc(end.diff(start)).format("HH:mm:ss"))
+                    }
+                }
                 var duration = moment.duration(moment(time[0], "HH:mm:ss").format("HH:mm:ss"))
                 for (var i = 1; i < time.length; i++) {
                     duration.add(moment(time[i], "HH:mm:ss").format("HH:mm:ss"))

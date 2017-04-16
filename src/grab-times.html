@@ -37,10 +37,15 @@
                 appDuration: {
                     type: Array,
                     value: []
+                },
+                prac: {
+                    type: String,
+                    value: 'filter'
                 }
             },
             observers: [
-                '_grabAvg(practitionerAppointments.splices)'
+                '_grabAvg(practitionerAppointments.splices)',
+                '_setPrac(practitioner)'
             ],
             _grabAvg: function (apps) {
                 var app = this.practitionerAppointments
@@ -64,6 +69,11 @@
                     }
                 }
                 this.appDuration = []
+            },
+            _setPrac: function(prac) {
+                if(prac) {
+                    this.prac = this.practitioner
+                }
             }
         })
     </script>
