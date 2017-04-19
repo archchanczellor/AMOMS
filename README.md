@@ -1,4 +1,5 @@
-# Polymer App Toolbox - Starter Kit
+# Modern Medial Management System
+##AKA Alternative Medical Office Mangement System
 
 [![Build Status](https://travis-ci.org/PolymerElements/polymer-starter-kit.svg?branch=master)](https://travis-ci.org/PolymerElements/polymer-starter-kit)
 
