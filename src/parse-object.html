@@ -54,28 +54,28 @@
             },
 
             _parseThatObject: function (item) {
-                if (item) {
-                    var oldItem = this.item.oldItem, newItem = this.item.newItem, key
-                    this.hideData = (this.item.oldItem == "") ? true : false
-                    for (key in oldItem) {
-                        if (!oldItem.hasOwnProperty(key)) continue;
-                        var oldP = document.createElement('p')
-                        oldP.className = 'items'
-                        oldP.innerText = key + ': ' + oldItem[key]
-                        document.querySelector('#oldParentDiv').appendChild(oldP)
+                    if (item && document.querySelector('#oldParentDiv') && document.querySelector('#oldParentDiv')) {
+                        var oldItem = this.item.oldItem, newItem = this.item.newItem, key
+                        this.hideData = (this.item.oldItem == "") ? true : false
+                        for (key in oldItem) {
+                            if (!oldItem.hasOwnProperty(key)) continue;
+                            var oldP = document.createElement('p')
+                            oldP.className = 'items'
+                            oldP.innerText = key + ': ' + oldItem[key]
+                            document.querySelector('#oldParentDiv').appendChild(oldP)
+                        }
+                        for (key in newItem) {
+                            if (!newItem.hasOwnProperty(key)) continue;
+                            var newP = document.createElement('p')
+                            newP.className = 'items'
+                            newP.innerText = key + ': ' + newItem[key]
+                            document.querySelector('#newParentDiv').appendChild(newP)
+                            $('.items').css({
+                                fontSize: '14px',
+                                fontWeight: '300'
+                            })
+                        }
                     }
-                    for (key in newItem) {
-                        if (!newItem.hasOwnProperty(key)) continue;
-                        var newP = document.createElement('p')
-                        newP.className = 'items'
-                        newP.innerText = key + ': ' + newItem[key]
-                        document.querySelector('#newParentDiv').appendChild(newP)
-                        $('.items').css({
-                            fontSize: '14px',
-                            fontWeight: '300'
-                        })
-                    }
-                }
             }
         })
     </script>

@@ -13,6 +13,8 @@
 
             .details {
                 margin: 5px 0;
+                /*height: 20vh;*/
+                /*max-height: 20vh;*/
             }
 
             .material {
@@ -76,7 +78,7 @@
                 }
             },
             _onActiveItemChanged: function (e) {
-                this.$.changesGrid.expandedItems = [e.detail.value];
+                this.$.changesGrid.expandedItems = e ? [e.detail.value] : [];
             }
         })
     </script>

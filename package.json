@@ -24,7 +24,7 @@
     "polymer-build": "^1.0.0"
   },
   "scripts": {
-    "dev": "polymer serve",
+    "dev": "polymer serve --open",
     "prod": "polymer build",
     "depoly": "polymer build && firebase deploy"
   }
