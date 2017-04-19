@@ -63,11 +63,12 @@
                     <paper-input type="password" id="userPassword" name="password" label="Password"
                                  required></paper-input>
                     </div>
-                    <paper-dropdown-menu label="role" id="userRole" name="Role" required>
+                    <paper-dropdown-menu label="Role" id="userRole" name="Role" required>
                         <paper-menu class="dropdown-content">
                             <paper-item name="administrator" value="administrator">Administrator</paper-item>
                             <paper-item name="secretary" value="secretary">Secretary</paper-item>
                             <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
+                            <paper-item name="deactivated" value="deactivated">Deactivated</paper-item>
                         </paper-menu>
                     </paper-dropdown-menu>
                 </div>
@@ -93,6 +94,7 @@
                     <paper-item name="administrator" value="administrator">Administrator</paper-item>
                     <paper-item name="secretary" value="secretary">Secretary</paper-item>
                     <paper-item name="practitioner" value="practitioner">Practitioner</paper-item>
+                    <paper-item name="deactivated" value="deactivated">Deactivated</paper-item>
                 </paper-menu>
             </paper-dropdown-menu>
             <div class="buttons">
@@ -202,8 +204,10 @@
                     return 0;
                 else if (role == 'Secretary')
                     return 1
-                else
+                else if (role == 'Practitioner')
                     return 2
+                else
+                    return 3
             }
         })
     </script>

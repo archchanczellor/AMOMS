@@ -21,6 +21,7 @@
 
             .center-grid, .notes-card {
                 transition: all 1s ease-in-out;
+                margin-bottom: 30px;
             }
 
             h1 {
@@ -68,7 +69,12 @@
     <script>
         Polymer({
             is: 'view-changes',
-
+            properties: {
+                logItems: {
+                    type: Array,
+                    value: []
+                }
+            },
             _onActiveItemChanged: function (e) {
                 this.$.changesGrid.expandedItems = [e.detail.value];
             }

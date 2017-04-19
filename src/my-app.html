@@ -32,18 +32,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
 <link rel="import" href="../bower_components/vaadin-date-picker/vaadin-date-picker.html">
 <link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
-<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid-selection-column.html">
 <link rel="import" href="../bower_components/vaadin-grid/vaadin-grid-sorter.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 
 <!--Custom Component-->
 <link rel="import" href="edit-note.html">
 <link rel="import" href="edit-user.html">
+<link rel="import" href="edit-patient.html">
 <link rel="import" href="logout.html">
 <link rel="import" href="logging.html">
 <link rel="import" href="prescription.html">
+<link rel="import" href="shared-styles.html">
 
+<script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
 <script src="../bower_components/moment/moment.js"></script>
 
 <dom-module id="my-app">
@@ -173,6 +179,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             app-header {
                 color: #fff;
             }
+
+            #warnToast {
+                --paper-toast-background-color: #F44336;
+                --paper-toast-color: white;
+            }
         </style>
         <app-location route="{{route}}"></app-location>
         <app-route
@@ -204,7 +215,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 array-to-filter="[[appointments]]"
                 filter="[[formatEventDate]]"
                 filtered-array="{{appointmentsByDate}}"
-                filter-by="eventDate">
+                filter-by="eventDate"
+                filter-method="equals">
         </poly-filter>
 
         <iron-media-query query="(max-width: 1024px)" query-matches="{{smallScreen}}"></iron-media-query>
@@ -339,9 +351,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                      value="{{appDetail.description::input}}"></paper-input>
                     </div>
                     <div>
-                        <paper-input name="editDatePickerDialog" allowed-pattern="/(\d{4})-(\d{2})-(\d{2})"
-                                     id="editEventDatePicker" label="Event Date" value="[[formatEventDate]]"
-                                     on-tap="openDialog" placeholder="YYYY-MM-DD" required auto-validate></paper-input>
+                        <vaadin-date-picker name="editDatePickerDialog" label="Event Date" id="editEventDatePicker"
+                                            value="{{formatEventDate}}" required auto-validate></vaadin-date-picker>
                         <paper-input id="editStartTimeInput" label="Start Time" required on-tap="openDialog"
                                      name="editStartTimeDialog" auto-validate value="[[editStartTime]]"></paper-input>
                         <paper-input id="editEndTimeInput" label="End Time" required on-tap="openDialog"
@@ -359,9 +370,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <div class="buttons" hidden$="[[edit]]">
                 <paper-button dialog-dismiss>Dismiss</paper-button>
                 <paper-button hidden$="[[!_computeEditButtonView(userRole, appDetail.status)]]"
-                              on-tap="editApp">
-                    Edit
-                </paper-button>
+                              on-tap="editApp">Edit</paper-button>
                 <paper-button hidden$="[[!_computeCheckInButtonView(userRole, appDetail.status)]]" auto-focus
                               on-tap="checkIn">Check In
                 </paper-button>
@@ -384,9 +393,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </div>
         </paper-dialog>
 
-        <!--Date & Time Pickers-->
-        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="editDatePickerDialog"
-                               date="{{editEventDate}}"></app-datepicker-dialog>
         <paper-dialog id="editStartTimeDialog" class="paper-time-picker-dialog"
                       on-iron-overlay-closed="dismissDialog">
             <paper-time-picker id="editStartTimePicker" hour="0-24" time="{{editStartTime}}"></paper-time-picker>
@@ -417,7 +423,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <prescription-page user="[[user]]"></prescription-page>
         </paper-dialog>
 
+        <paper-dialog id="addPatientDialog" class="fixed-dialog-width" entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation" modal>
+            <edit-patient></edit-patient>
+        </paper-dialog>
+
         <paper-toast id="mainToast" text="{{toastMessage}}"></paper-toast>
+        <paper-toast id="warnToast" class="fit-bottom" text="{{toastMessage}}"></paper-toast>
 
     </template>
 
@@ -473,6 +485,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 'viewApp': 'openAppDialog',
                 'viewNote': '_updateNote',
                 'viewUser': '_showUserDialog',
+                'viewPatient': '_showPatientDialog',
                 'viewPrescription': '_viewPrescription',
                 'centerPrescription': '_centerPrescription'
             },
@@ -500,6 +513,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             _changeRole: function (role) {
                 this.userRole = role;
+                if (role == 'Deactivated') {
+                    this.$.mainAuth.signOut();
+                    window.history.pushState({}, null, '/login');
+                    window.dispatchEvent(new CustomEvent('location-changed'));
+                    this.toastMessage = 'Your account has been deactivated. Please speak with an administrator.'
+                    this.$.warnToast.open()
+                }
+
             },
 
             _computeEditButtonView: function (role, status) {
@@ -602,6 +623,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
             editApp: function () {
                 this.edit = true;
+                this.formatEventDate = this.appDetail.eventDate
                 this.$.viewAppDialog.center();
             },
             areYouSure: function () {
@@ -684,10 +706,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             var appStart = moment(appDate[i].startTime, ["HH:mm"])
                             var appEnd = moment(appDate[i].endTime, ["HH:mm"])
                             if (start.isBetween(appStart, appEnd, null, '[)') || end.isBetween(appStart, appEnd, null, '(]')) {
-                                this.$.startTimeInput.errorMessage = "Time conflict with another appointment";
-                                this.$.endTimeInput.errorMessage = "Time conflict with another appointment"
-                                this.$.endTimeInput.invalid = true;
-                                this.$.startTimeInput.invalid = true;
+                                this.$.editStartTimeInput.errorMessage = "Time conflict with another appointment";
+                                this.$.editEndTimeInput.errorMessage = "Time conflict with another appointment"
+                                this.$.editEndTimeInput.invalid = true;
+                                this.$.editStartTimeInput.invalid = true;
                                 return false
                             }
                         }
@@ -707,6 +729,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
             _viewPrescription: function () {
                 this.$.addPrescriptionDialog.open();
+            },
+            _showPatientDialog: function () {
+                this.$.addPatientDialog.open()
             }
         })
 

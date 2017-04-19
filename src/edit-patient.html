@@ -1,0 +1,264 @@
+<link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
+<link rel="import" href="../bower_components/gold-phone-input/gold-phone-input.html">
+<link rel="import" href="../bower_components/gold-zip-input/gold-zip-input.html">
+<link rel="import" href="../extra-files/address-autocomplete/address-autocomplete.html">
+
+<dom-module id="edit-patient">
+    <template>
+        <style>
+            :root {
+                display: block
+            }
+
+            .horizontalLayout {
+                @apply(--layout-horizontal);
+                @apply(--layout-justified);
+            }
+
+            .horizontal-layout {
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+
+            .vertical-layout {
+                @apply(--layout-vertical);
+            }
+
+            .form-left {
+                padding-right: 10px;
+                width: 50%;
+            }
+
+            .form-right {
+                width: 50%;
+            }
+
+            .buttons {
+                @apply(--layout-horizontal);
+                @apply(--layout-end-justified);
+                margin-top: 20px;
+            }
+
+            h1 {
+                font-weight: 100;
+            }
+        </style>
+
+        <firebase-document id="grabPatientDocument" data="{{patient}}" path="{{patientPath}}"
+                           app-name="primary"></firebase-document>
+        <firebase-document id="setPatientDocument" data="{{setPatient}}" path="/patients/"
+                           app-name="primary"></firebase-document>
+
+        <div hidden="[[editing]]">
+            <h1>Add Patient</h1>
+            <div class="horizontal-layout">
+                <div class="vertical-layout form-left">
+                    <div class="horizontalLayout">
+                        <paper-input id="firstName" name="firstName" label="First Name" autofocus
+                                     required value="{{newPatient.firstName::input}}"></paper-input>
+                        <paper-input id="lastName" name="lastName" label="Last Name" required
+                                     value="{{newPatient.lastName::input}}"></paper-input>
+                    </div>
+                    <vaadin-date-picker name="birthdate" id="birthdate" required label="Date Of Birth"
+                                        value="{{newPatient.birthdate}}"></vaadin-date-picker>
+                    <gold-email-input name="email" label="Email" value="{{newPatient.email::input}}" auto-validate
+                                      required id="email"></gold-email-input>
+                    <gold-phone-input name="phoneNumber" value="{{newPatient.phoneNumber::input}}" label="Phone Number"
+                                      auto-validate required id="phoneNumber"></gold-phone-input>
+                    <paper-dropdown-menu label="Gender" id="gender" name="gender" required>
+                        <paper-menu class="dropdown-content" selected="{{newPatient.gender}}" attr-for-selected="value">
+                            <paper-item value="Female">Female</paper-item>
+                            <paper-item value="Male">Male</paper-item>
+                            <paper-item value="Prefer not to say">Prefer not to say</paper-item>
+                        </paper-menu>
+                    </paper-dropdown-menu>
+                </div>
+                <div class="address form-right">
+                    <address-autocomplete street1="{{newPatient.streetAddress1}}"
+                                          street2="{{newPatient.streetAddress2}}"
+                                          state="{{newPatient.state}}" city="{{newPatient.city}}"
+                                          zip="{{newPatient.zip}}"></address-autocomplete>
+                </div>
+            </div>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button on-tap="_savePatient">Submit</paper-button>
+            </div>
+        </div>
+        <div hidden="[[!editing]]">
+            <h2>Edit [[patient.firstName]] [[patient.lastName]]</h2>
+            <div class="horizontal-layout">
+                <div class="vertical-layout form-left">
+                    <div class="horizontalLayout">
+                        <paper-input id="editFirst" name="firstName" label="First Name" autofocus
+                                     required value="{{patientEdit.firstName::input}}"></paper-input>
+                        <paper-input id="editLast" name="lastName" label="Last Name"
+                                     value="{{patientEdit.lastName::input}}" required></paper-input>
+                    </div>
+                    <gold-email-input name="email" label="Email" validate id="editEmail"
+                                      value="{{patientEdit.email::input}}" required></gold-email-input>
+                    <gold-phone-input name="phoneNumber" label="Phone Number" validate id="editPhone"
+                                      value="{{patientEdit.phoneNumber::input}}" required></gold-phone-input>
+                    <vaadin-date-picker name="birthdate" on-tap="editDate" id="editDOB"
+                                        value="{{patientEdit.birthdate}}" label="Birthdate"
+                                        required></vaadin-date-picker>
+                    <paper-dropdown-menu label="Gender" id="editGender" name="gender" required>
+                        <paper-menu class="dropdown-content" selected="{{patientEdit.gender}}"
+                                    attr-for-selected="value">
+                            <paper-item value="Female">Female</paper-item>
+                            <paper-item value="Male">Male</paper-item>
+                            <paper-item value="Prefer not to say">Prefer not to say</paper-item>
+                        </paper-menu>
+                    </paper-dropdown-menu>
+                </div>
+                <div class="address form-right">
+                    <paper-input id="editAddressInput" type="text" placeholder="" name="streetAddress1" required
+                                 label="Street Address 1"
+                                 value="{{patientEdit.streetAddress1::input}}"></paper-input>
+                    <paper-input id="editAddress2Input" type="text" name="streetAddress2"
+                                 label="Street Address 2"
+                                 value="{{patientEdit.streetAddress2::input}}"></paper-input>
+                    <paper-input id="editCityInput" type="text" name="city" required
+                                 value="{{patientEdit.city::input}}" label="City"></paper-input>
+                    <paper-input id="editStateInput" type="text" name="state"
+                                 value="{{patientEdit.state::input}}" required label="State"></paper-input>
+                    <paper-input id="editZipCodeInput" type="text" name="zip" required
+                                 label="ZIP Code" value="{{patientEdit.zip::input}}"></paper-input>
+                </div>
+            </div>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button on-tap="_saveEdit">Save</paper-button>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'edit-patient',
+
+            properties: {
+                newPatient: {
+                    type: Object,
+                    value: null
+                },
+                settings: {
+                    type: Object,
+                    value: {
+                        firstName: null,
+                        lastName: null,
+                        birthdate: null,
+                        email: null,
+                        gender: null,
+                        streetAddress1: null,
+                        streetAddress2: null,
+                        city: null,
+                        state: null,
+                        zip: null
+                    }
+                },
+                editing: {
+                    type: Boolean,
+                    value: false
+                },
+                patient: Object,
+                patientPath: {
+                    type: String,
+                    value: null
+                }
+            },
+            listeners: {
+                'addPatient': '_addPatient',
+                'editPatient': '_editPatient'
+            },
+            observers: [
+                '_setPatient(patient.firstName)'
+            ],
+            _setPatient: function (patient) {
+                this.patientEdit = this.patient
+                this.oldPatient = JSON.stringify(this.patient)
+            },
+            _addPatient: function () {
+                this.editing = false;
+                this.newPatient = this.settings;
+            },
+            _editPatient: function (e) {
+                this.editing = true
+                this.patientPath = null
+                this.patientPath = '/patients/' + e.detail.patient
+            },
+            _saveEdit: function () {
+                this.set('patient.firstName', this.patientEdit.firstName)
+                this.set('patient.lastName', this.patientEdit.lastName)
+                this.set('patient.phoneNumber', this.patientEdit.phoneNumber)
+                this.set('patient.email', this.patientEdit.email)
+                this.set('patient.birthdate', this.patientEdit.birthdate)
+                this.set('patient.gender', this.patientEdit.gender)
+                this.set('patient.streetAddress1', this.patientEdit.streetAddress1)
+                this.set('patient.streetAddress2', this.patientEdit.streetAddress2)
+                this.set('patient.city', this.patientEdit.city)
+                this.set('patient.state', this.patientEdit.state)
+                this.set('patient.zip', this.patientEdit.zip)
+                document.querySelector('patient-page').toastMessage = "Patient has been edited!";
+                document.querySelector('#patientToast').open();
+                document.querySelector('log-action').fire('createLog', {
+                    action: 'Patient Updated!',
+                    newItem: this.patient,
+                    oldItem: JSON.parse(this.oldPatient)
+                })
+                document.querySelector('#addPatientDialog').close();
+            },
+            _savePatient: function () {
+                if(this.validate('add')) {
+                    this.$.setPatientDocument.data = this.newPatient;
+                    this.$.setPatientDocument.save('/patients/').then(function () {
+                        document.querySelector('#addPatientDialog').close();
+                        document.querySelector('patient-page').toastMessage = "Patient has been added!";
+                        document.querySelector('#patientToast').open();
+                        document.querySelector('log-action').fire('createLog', {
+                            action: 'Patient Added',
+                            newItem: document.querySelector('edit-patient').newPatient,
+                            oldItem: ''
+                        })
+                    }, function () {
+                        document.querySelector('patient-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
+                        document.querySelector('#patientToast').open();
+                    })
+                }
+            },
+            validate: function (type) {
+                if (type == 'add') {
+                    if (this.$.firstName.validate() &&
+                        this.$.lastName.validate() &&
+                        this.$.birthdate.validate() &&
+                        this.$.email.validate() &&
+                        this.$.phoneNumber.validate() &&
+                        this.$.gender.validate() &&
+                        document.querySelector('#address1Input').validate() &&
+                        document.querySelector('#address2Input').validate() &&
+                        document.querySelector('#cityInput').validate() &&
+                        document.querySelector('#zipCodeInput').validate() &&
+                        document.querySelector('#stateInput').validate())
+                        return true
+                    else
+                        return false
+                }
+                else {
+                    if (this.$.editFirst.validate() &&
+                        this.$.editLast.validate() &&
+                        this.$.editDOB.validate() &&
+                        this.$.editEmail.validate() &&
+                        this.$.editPhone.validate() &&
+                        this.$.editGender.validate() &&
+                        this.$.editAddressInput1.validate() &&
+                        this.$.editAddressInput2.validate() &&
+                        this.$.editStateInput.validate() &&
+                        this.$.editCityInput.validate() &&
+                        this.$.editZipCodeInput.validate())
+                        return true
+                    else
+                        return false
+                }
+            }
+        })
+    </script>
+</dom-module>

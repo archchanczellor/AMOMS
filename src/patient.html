@@ -9,31 +9,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/paper-material/paper-material.html">
-<link rel="import" href="../bower_components/iron-list/iron-list.html">
-<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
-<link rel="import" href="../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
-<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/iron-form/iron-form.html">
-<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
-<link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
-<link rel="import" href="../bower_components/gold-phone-input/gold-phone-input.html">
-<link rel="import" href="../bower_components/gold-zip-input/gold-zip-input.html">
-<link rel="import" href="../bower_components/app-datepicker/app-datepicker-dialog.html">
-<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../extra-files/address-autocomplete/address-autocomplete.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/poly-filter/poly-filter.html">
 <link rel="import" href="../bower_components/paper-searchbox/paper-searchbox.html">
-<link rel="import" href="shared-styles.html">
-<script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
-<script src="../bower_components/jquery-serialize-object/dist/jquery.serialize-object.min.js"></script>
+<link rel="import" href="../bower_components/moment-element/moment-element.html">
 <dom-module id="patient-page">
 
     <template>
@@ -52,11 +31,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 @apply(--layout-center);
             }
 
-            .horizontal-around {
-                @apply(--layout-horizontal);
-                @apply(--layout-around-justified);
-            }
-
             .patient-info {
                 background: white;
                 padding: 15px 0 0 15px;
@@ -66,81 +40,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 height: auto;
             }
 
-            .patient-content {
-                @apply(--layout-horizontal);
-                max-height: 35vh;
-                -webkit-transition: max-height .25s;
-                -moz-transition: max-height .25s;
-                -ms-transition: max-height .25s;
-                -o-transition: max-height .25s;
-                transition: max-height .25s;
-            }
-
             .spacer {
                 height: 5vh;
-            }
-
-            .itemInfo {
-                position: relative;
-            }
-
-            .itemName {
-                padding: 0 5px 0 5px;
-            }
-
-            #scrollingRegion {
-                border-radius: 4px;
-                overflow-y: hidden;
-                max-height: 79vh;
-                width: 20vw;
-                background-color: #fff;
-                box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
-                scroll-behavior: smooth;
-            }
-
-            .justifyItems {
-                @apply(--layout-horizontal);
-                @apply(--layout-justified);
-                width: 18vw;
-            }
-
-            .buttons {
-                @apply(--layout-horizontal);
-                @apply(--layout-end-justified);
-                margin-top: 20px;
-            }
-
-            .horizontalLayout {
-                @apply(--layout-horizontal);
-                @apply(--layout-justified);
-            }
-
-            #firstName, #birthdate {
-                padding-right: 5px;
-            }
-
-            #lastName, #gender {
-                padding-left: 5px;
             }
 
             .horizontal-layout {
                 @apply(--layout-horizontal);
                 @apply(--layout-center);
             }
-
-            .vertical-layout {
-                @apply(--layout-vertical);
-            }
-
-            .form-left {
-                padding-right: 10px;
-                width: 50%;
-            }
-
-            .form-right {
-                width: 50%;
-            }
-
             .justify-right {
                 @apply(--layout-horizontal);
                 @apply(--layout-end-justified);
@@ -163,11 +70,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 padding: 0 23px
             }
 
-            .delete-patient-button {
-                color: white;
-                background-color: #F44336;
-            }
-
             .edit-patient-button {
                 color: white;
                 background-color: #FF5722;
@@ -177,23 +79,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             .class[hidden] {
                 display: none;
             }
-
-            #addPatientNotes, #viewNoteDialog {
-                width: 30vw;
-            }
-
-            .selected-note {
-                max-height: 30vh;
-            }
         </style>
         <firebase-query
                 id="queryPatients"
-                path="/patients"
+                path="[[patientQueryPath]]"
                 app-name="primary"
                 data="{{dataQuery}}"></firebase-query>
         <firebase-query
                 id="queryNotes"
-                path="[[notesPath}}"
+                path="[[notesPath]]"
                 app-name="primary"
                 data="{{patientNotes}}"></firebase-query>
         <firebase-document
@@ -201,7 +95,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 path="/patients/"
                 app-name="primary"
                 data="{{patientData}}"></firebase-document>
-        <!--<div class="vertical-center">-->
+        <firebase-document
+                id="selectedPatientDoc"
+                path="{{patientPath}}"
+                app-name="primary"
+                data="{{patient}}"></firebase-document>
         <poly-filter
                 array-to-filter="[[dataQuery]]"
                 filter="[[patientSearch]]"
@@ -216,7 +114,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                          value="{{patientSearch::input}}"></paper-searchbox>
                     </div>
                     <div class="horizontal-layout">
-                        <paper-button class="edit-patient-button" raised on-tap="_editPatient" hidden$="[[!patient]]">
+                        <paper-button class="edit-patient-button" raised on-tap="_editPatient"
+                                      hidden$="[[!patientPath]]">
                             Edit
                         </paper-button>
                         <paper-button class="add-patient-button" raised on-tap="openDialog">Add Patient</paper-button>
@@ -228,7 +127,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <template class="header">
                             <vaadin-grid-sorter path="lastName" direction="asc">Name</vaadin-grid-sorter>
                         </template>
-                        <template>[[item.fullName]]</template>
+                        <template>[[item.firstName]]&nbsp;[[item.lastName]]</template>
                     </vaadin-grid-column>
 
                     <vaadin-grid-column flex-grow="0" width="124px">
@@ -246,7 +145,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <template class="header">
                             <vaadin-grid-sorter path="birthdate">DOB</vaadin-grid-sorter>
                         </template>
-                        <template>[[item.birthdate]]</template>
+                        <template>
+                            <moment-element datetime="[[item.birthdate]]" output-format="M/DD/YYYY"></moment-element>
+                        </template>
                     </vaadin-grid-column>
                     <vaadin-grid-column flex-grow="0" width="124px">
                         <template class="header">
@@ -258,13 +159,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         <template class="header">Street</template>
                         <template>[[item.streetAddress1]]</template>
                     </vaadin-grid-column>
-                    <vaadin-grid-column flex-grow="0" width="50px">
+                    <vaadin-grid-column flex-grow="0" width="90px">
                         <template class="header">
                             <vaadin-grid-sorter path="state">State</vaadin-grid-sorter>
                         </template>
                         <template>[[item.state]]</template>
                     </vaadin-grid-column>
-                    <vaadin-grid-column flex-grow="0" width="74px">
+                    <vaadin-grid-column>
                         <template class="header">
                             <vaadin-grid-sorter path="city">City</vaadin-grid-sorter>
                         </template>
@@ -281,9 +182,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </paper-material>
             <!--</div>-->
             <div class="spacer"></div>
-            <paper-material class="patient-info" hidden$="[[!patient]]" elevation="1">
+            <paper-material class="patient-info" hidden$="[[!patientPath]]" elevation="1">
                 <div class="horizontal-justified horizontal-layout">
-                    <h1 class="patients-title">Notes for [[patient.fullName]]</h1>
+                    <h1 class="patients-title">Notes for [[patient.firstName]]&nbsp;[[patient.lastName]]</h1>
                     <div hidden$="[[!patient]]" class="justify-right">
                         <paper-button raised class="edit-patient-button" on-tap="_viewNoteDialog"
                                       hidden$="[[!selectedNote]]">View Note
@@ -314,113 +215,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 <p style="white-space: normal">[[item.note]]</p>
                             </template>
                         </vaadin-grid-column>
-
                     </vaadin-grid>
                 </div>
             </paper-material>
         </div>
         <div class="spacer"></div>
-        <paper-dialog id="addPatientDialog"
-                      no-cancel-on-outside-click
-                      class="paper-date-picker-dialog"
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-            <form is="iron-form" id="addPatientForm">
-                <h2>Add Patient</h2>
-                <div class="horizontal-layout">
-                    <div class="vertical-layout form-left">
-                        <div class="horizontalLayout">
-                            <paper-input id="firstName" name="firstName" label="First Name" autofocus
-                                         required></paper-input>
-                            <paper-input id="lastName" name="lastName" label="Last Name" required></paper-input>
-                        </div>
-                        <vaadin-date-picker name="birthdate" id="birthdate" required
-                                            label="Date Of Birth"></vaadin-date-picker>
-                        <gold-email-input name="email" label="Email" auto-validate required></gold-email-input>
-                        <gold-phone-input name="phoneNumber" label="Phone Number" auto-validate
-                                          required></gold-phone-input>
-                        <paper-dropdown-menu label="Gender" id="gender" name="gender" required>
-                            <paper-menu class="dropdown-content">
-                                <paper-item value="female">Female</paper-item>
-                                <paper-item value="male">Male</paper-item>
-                                <paper-item value="optOut">Prefer not to say</paper-item>
-                            </paper-menu>
-                        </paper-dropdown-menu>
-                    </div>
-                    <div class="address form-right">
-                        <address-autocomplete></address-autocomplete>
-                    </div>
-                </div>
-                <div class="buttons">
-                    <paper-button dialog-dismiss>Cancel</paper-button>
-                    <paper-button onclick="_submit()">Submit</paper-button>
-                </div>
-            </form>
-        </paper-dialog>
-        <paper-dialog id="editPatientDialog"
-                      no-cancel-on-outside-click
-                      class="paper-date-picker-dialog"
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-            <form is="iron-form" id="editPatientForm">
-                <h2>Edit [[patient.firstName]] [[patient.lastName]]</h2>
-                <div class="horizontal-layout">
-                    <div class="vertical-layout form-left">
-                        <div class="horizontalLayout">
-                            <paper-input id="editFirst" name="firstName" label="First Name" autofocus
-                                         required value="{{patientEdit.firstName::input}}"></paper-input>
-                            <paper-input id="editLast" name="lastName" label="Last Name"
-                                         value="{{patientEdit.lastName::input}}" required></paper-input>
-                        </div>
-                        <gold-email-input name="email" label="Email" validate
-                                          value="{{patientEdit.email::input}}" required></gold-email-input>
-                        <gold-phone-input name="phoneNumber" label="Phone Number" validate
-                                          value="{{patientEdit.phoneNumber::input}}" required></gold-phone-input>
-                        <paper-input name="birthdate" on-tap="editDate" id="editDOB"
-                                     value="{{patientEdit.birthdate::input}}"
-                                     label="Birthdate"
-                                     required></paper-input>
-                        <paper-dropdown-menu label="Gender" id="editGender" name="gender" required>
-                            <paper-menu class="dropdown-content" selected="{{_computeSelected(patientEdit.gender)}}">
-                                <paper-item name="female" value="female">Female</paper-item>
-                                <paper-item name="male" value="male">Male</paper-item>
-                                <paper-item name="optOut" value="optOut">Prefer not to say</paper-item>
-                            </paper-menu>
-                        </paper-dropdown-menu>
-                    </div>
-                    <div class="address form-right">
-                        <paper-input id="editAddressInput" type="text" placeholder="" name="streetAddress1" required
-                                     label="Street Address 1"
-                                     value="{{patientEdit.streetAddress1::input}}"></paper-input>
-                        <paper-input id="editAddress2Input" type="text" name="streetAddress2"
-                                     label="Street Address 2"
-                                     value="{{patientEdit.streetAddress2::input}}"></paper-input>
-                        <paper-input id="editCityInput" type="text" name="city" required
-                                     value="{{patientEdit.city::input}}" label="City"></paper-input>
-                        <paper-input id="editStateInput" type="text" name="state"
-                                     value="{{patientEdit.state::input}}" required label="State"></paper-input>
-                        <paper-input id="editZipCodeInput" type="text" name="zip" required
-                                     label="ZIP Code" value="{{patientEdit.zip::input}}"></paper-input>
-                    </div>
-                </div>
-                <div class="buttons">
-                    <paper-button dialog-dismiss>Cancel</paper-button>
-                    <paper-button on-tap="_saveEdit">Save</paper-button>
-                </div>
-            </form>
-        </paper-dialog>
-        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel" id="datePicker"
-                               date="{{birthdate}}"></app-datepicker-dialog>
-        <app-datepicker-dialog confirm-label="Confirm Date" dismiss-label="Cancel"
-                               input-date="{{patient.birthdate}}" id="editDate"
-                               date="{{patient.birthdate}}"></app-datepicker-dialog>
         <paper-toast id="patientToast" text="{{toastMessage}}"></paper-toast>
     </template>
-    <script>
-        function _submit(event) {
-            $('#addPatientForm').submit()
-        }
-    </script>
     <script>
 
         Polymer({
@@ -454,6 +255,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 selectedNote: {
                     type: Object,
                     value: null
+                },
+                newPatient: Object,
+                notesPath: String,
+                patientPath: String,
+                patientQueryPath: {
+                    type: String,
+                    value: '/patients'
                 }
             },
 
@@ -462,7 +270,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             _selectPatient: function (item) {
-                this.patient = item;
+                this.patientPath = null
+                this.patientPath = item ? '/patients/' + item.$key : null
                 this.$.patientGrid.selectedItems = item ? [item] : []
                 this.notesPath = null;
                 this.notesPath = item ? '/notes/' + item.$key : null
@@ -479,79 +288,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             _openNoteDialog: function () {
                 this.fire('viewNote')
-                document.querySelector('edit-note').fire('addNote', {patient: this.patient.$key})
+                document.querySelector('edit-note').fire('addNote', {patient: this.$.patientGrid.selectedItems[0].$key})
             },
 
             openDialog: function () {
-                this.$.addPatientDialog.open();
+                this.fire('viewPatient')
+                document.querySelector('edit-patient').fire('addPatient')
             },
 
             _editPatient: function () {
-                this.patientEdit = this.patient;
-                this.$.editPatientDialog.open();
+                this.fire('viewPatient')
+                document.querySelector('edit-patient').fire('editPatient', {patient: this.$.patientGrid.selectedItems[0].$key})
             },
             _computeSelected: function (gender) {
                 if (gender == 'Female')
-                    return 0;
+                    return 'female';
                 else if (gender == 'Male')
-                    return 1
+                    return 'male'
                 else
-                    return 2
-            },
-
-            addPatient: function () {
-                var data = $("#addPatientForm :input").serializeObject();
-                data.gender = this.$.gender.value
-                data.fullName = this._concat(data.firstName, data.lastName)
-                this.$.documentPatient.data = data;
-                this.$.documentPatient.save('/patients/').then(function () {
-                    document.querySelector('#addPatientDialog').close();
-                    document.querySelector('patient-page').toastMessage = "Patient has been added!";
-                    document.querySelector('#patientToast').open();
-                }, function () {
-                    document.querySelector('patient-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#patientToast').open();
-                })
-            },
-            _saveEdit: function () {
-                var key = this.patientEdit.$key;
-                var tempData = $("#editPatientForm :input").serializeObject();
-                tempData.gender = this.$.editGender.value;
-                tempData.fullName = this._concat(tempData.firstName, tempData.lastName)
-                this.$.documentPatient.data = tempData;
-                this.$.documentPatient.save('/patients/', key).then(function () {
-                    document.querySelector('#editPatientDialog').close();
-                    document.querySelector('patient-page').toastMessage = "Patient has been updated!";
-                    document.querySelector('#patientToast').open();
-                    document.querySelector('patient-page').dirtyCheck();
-                }, function () {
-                    document.querySelector('patient-page').toastMessage = "Something seems to have gone wrong. Please Try again.";
-                    document.querySelector('#patientToast').open();
-                })
-            },
-            openDate: function () {
-                this.$.datePicker.open();
-            },
-            editDate: function () {
-                this.$.editDate.open();
-            },
-            dirtyCheck: function () {
-                this.async(function () {
-                    this.patient = null;
-                    this.patientEdit = null;
-                    var temp = this.dataQuery;
-                    this.set('dataQuery', []);
-                    this.set('dataQuery', temp);
-                }, 500)
-            },
-            _getTodaysDate: function () {
-                var today = new Date();
-                return today.toLocaleString()
+                    return 'optOut'
             },
             _viewNoteDialog: function () {
                 this.fire('viewNote')
                 document.querySelector('edit-note').fire('setNote', {
-                    patient: this.patient.$key,
+                    patient: this.$.patientGrid.selectedItems[0].$key,
                     noteKey: this.selectedNote.$key
                 })
             }
