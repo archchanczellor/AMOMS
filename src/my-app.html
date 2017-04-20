@@ -363,7 +363,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <div hidden$="[[!edit]]" class="horizontal-justified app-status-buttons">
                 <div class="horizontal-center">Set Appointment Status:</div>
                 <div class="status-buttons">
-                    <paper-button on-tap="noShow" class="no-show">No Show</paper-button>
+                    <paper-button dialog-dismiss on-tap="noShow" class="no-show">No Show</paper-button>
                     <paper-button on-tap="areYouSure" class="cancel-button">Cancel</paper-button>
                 </div>
             </div>
@@ -524,7 +524,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             _computeEditButtonView: function (role, status) {
-                if (status == "Concluded" || status == "In-Progress")
+                if (status == "Concluded" || status == "In-Progress" || status == "No Show")
                     return false
                 else if (role == "Secretary" || role == "Administrator")
                     return true
@@ -533,7 +533,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             _computeCheckInButtonView: function (role, status) {
-                if (status == "Ready" || status == "Concluded" || status == "In-Progress")
+                if (status == "Ready" || status == "Concluded" || status == "In-Progress" || status == 'No Show')
                     return false
                 else if (role == "Secretary" || role == "Administrator")
                     return true

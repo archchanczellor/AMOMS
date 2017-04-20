@@ -271,10 +271,11 @@
             },
 
             _getNextWeekAppointments: function (apps) {
-                while (this.counter < this.appointments.length) {
-                    if (moment(this.appointments[this.counter].eventDate).isBetween(this.nextMonday, this.nextFriday, null, '[]'))
-                        this.push('phoneCalls', this.appointments[this.counter])
-                    this.counter++
+                if(apps) {
+                    for(var i=0;i<this.appointments.length;i++) {
+                        if (moment(this.appointments[i].eventDate).isBetween(this.nextMonday, this.nextFriday, null, '[]'))
+                            this.push('phoneCalls', this.appointments[i])
+                    }
                 }
             },
             getAvg: function () {

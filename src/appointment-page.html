@@ -81,10 +81,20 @@
         <div class="center notes-card">
             <paper-material elevation="2">
                 <h2 class="appTitle">[[appTitle]]</h2>
-                <p>Description: &nbsp;[[appDetail.description]]</p>
-                <p>Patient: &nbsp;[[appPatient.fullName]]</p>
-                <p>Practitioner: &nbsp;[[appPrac.firstName]] [[appPrac.lastName]]</p>
-                <p hidden$="[[!appDuration]]">Duration: &nbsp;[[appDuration]]</p>
+                <div class="horizontal-justified">
+                    <div>
+                        <p>Description: &nbsp;[[appDetail.description]]</p>
+                        <p>Patient: &nbsp;[[appPatient.fullName]]</p>
+                        <p>Practitioner: &nbsp;[[appPrac.firstName]] [[appPrac.lastName]]</p>
+                        <p hidden$="[[!appDuration]]">Duration: &nbsp;[[appDuration]]</p>
+                    </div>
+                    <div>
+                        <p>Phone Number: &nbsp;[[appPatient.phoneNumber]]</p>
+                        <p>Email: &nbsp;[[appPatient.email]]</p>
+                        <p>Gender: &nbsp;[[appPatient.gender]]</p>
+                        <p>Address: &nbsp;[[appPatient.streetAddress1]],&nbsp;[[appPatient.city]],&nbsp;[[appPatient.state]],&nbsp;[[appPatient.zip]]</p>
+                    </div>
+                </div>
                 <div class="horizontal-justified">
                     <p>Status: &nbsp;[[appDetail.status]]</p>
                     <paper-button class="start-appointment" raised hidden$="[[_computeStart(statusChange)]]"
@@ -262,7 +272,8 @@
                     this.appTitle = temp[0];
                     this.appDuration = null
                     if (this.appDetail.actualStart && this.appDetail.actualEnd) {
-                        var start = moment(this.appDetail.actualStart,"HH:mm:ss"), end = moment(this.appDetail.actualEnd,"HH:mm:ss")
+                        var start = moment(this.appDetail.actualStart, "HH:mm:ss"),
+                            end = moment(this.appDetail.actualEnd, "HH:mm:ss")
                         this.appDuration = moment.utc(end.diff(start)).format("HH:mm:ss")
                     }
                 }
@@ -310,7 +321,7 @@
                     document.querySelector('schedule-page').fire('updateAgenda')
             },
             _computeStart: function (status) {
-                if (status == "In-Progress" || status == "Concluded")
+                if (status == "In-Progress" || status == "Concluded" || status == 'No Show')
                     return true
                 return false
             },

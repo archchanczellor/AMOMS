@@ -10,9 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="credentials.html">
 <link rel="import" href="shared-styles.html">
 
@@ -73,9 +72,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             <input name="email" value="[[email]]" hidden>
                             <input name="password" value="[[password]]" hidden>
                             <div class="horizontal">
-                                <paper-button raised class="submit" type="submit" on-tap="validateCred">
+                                <paper-button hidden$="[[loading]]" raised class="submit" type="submit" on-tap="validateCred">
                                     Login
                                 </paper-button>
+                                <paper-spinner hidden$="[[!loading]]" active></paper-spinner>
                                 <!--<paper-button raised class="submit" on-tap="signUpWithEmailAndPassword">Sign Up</paper-button>-->
                             </div>
                         </form>
@@ -102,7 +102,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             is: 'login-page',
             properties: {
-                errorMessage: String
+                errorMessage: String,
+                loading: {
+                    type: Boolean,
+                    value: false
+                }
             },
 
             listeners: {
@@ -114,11 +118,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             signIn: function () {
+                this.loading = true
                 this.$.auth.signInWithEmailAndPassword(this.email, this.password)
                     .then(function () {
                         document.querySelector('login-credentials').fire('clearCred');
                         document.querySelector('login-page').email = null;
                         document.querySelector('login-page').password = null;
+                        document.querySelector('login-page').loading = false;
                         document.querySelector('my-app').toastMessage = "Sign In Successful";
                         document.querySelector('#mainToast').open();
                         window.history.pushState({}, null, '/agenda');

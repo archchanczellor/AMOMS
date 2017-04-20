@@ -78,7 +78,7 @@
                 }
             },
             _onActiveItemChanged: function (e) {
-                this.$.changesGrid.expandedItems = e ? [e.detail.value] : [];
+                this.$.changesGrid.expandedItems = e.detail.value ? [e.detail.value] : [];
             }
         })
     </script>
