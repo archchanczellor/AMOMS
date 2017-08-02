@@ -55,7 +55,7 @@ routing for the app:
     
 ### Test Login 
 
-    email: mdrussell01@gmail.com
+    email: starlord@3ms.com
     pass: passwordtest
 
 
