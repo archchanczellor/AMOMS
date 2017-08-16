@@ -192,11 +192,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 data="{{routeData}}"
                 tail="{{subroute}}"></app-route>
 
-        <firebase-app api-key="AIzaSyCKmg93dL5bhlwjv_Kd493mcLbUR0ok5sI"
+        <firebase-app api-key="Insert Api Key Here"
                       name="primary"
-                      auth-domain="amoms-9ecf6.firebaseapp.com"
-                      database-url="https://amoms-9ecf6.firebaseio.com"
-                      storage-bucket="amoms-9ecf6.appspot.com"></firebase-app>
+                      auth-domain="Insert Auth Domain"
+                      database-url="Insert Database Url"
+                      storage-bucket="Insert Storage Bucket"></firebase-app>
         <firebase-auth id="mainAuth" user="{{user}}" app-name="primary" provider="google"
                        on-error="handleError"></firebase-auth>
         <firebase-document id="filterUsers" app-name="primary" path="/users/{{user.uid}}"
